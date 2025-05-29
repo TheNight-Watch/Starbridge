@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,11 +56,11 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Main Content - grows to fill space */}
-      <div className="flex-1 overflow-auto">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-          {/* Tab Content - takes up remaining space */}
-          <div className="flex-1 container mx-auto px-4 py-6">
+      {/* Main Content - takes remaining space, with bottom padding for fixed nav */}
+      <div className="flex-1 overflow-auto pb-20">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
+          {/* Tab Content */}
+          <div className="container mx-auto px-4 py-6">
             {/* Dashboard Tab */}
             <TabsContent value="dashboard" className="space-y-6 mt-0">
               {/* Quick Status Cards */}
@@ -435,36 +436,38 @@ const Index = () => {
               </Card>
             </TabsContent>
           </div>
+        </Tabs>
+      </div>
 
-          {/* Bottom Navigation */}
-          <div className="border-t border-blue-100 bg-white/80 backdrop-blur-md">
-            <TabsList className="grid w-full grid-cols-6 bg-transparent border-0 h-16 rounded-none">
-              <TabsTrigger value="dashboard" className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600">
-                <BarChart3 className="h-5 w-5" />
-                <span className="text-xs">首页</span>
-              </TabsTrigger>
-              <TabsTrigger value="device" className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600">
-                <Smartphone className="h-5 w-5" />
-                <span className="text-xs">设备</span>
-              </TabsTrigger>
-              <TabsTrigger value="profile" className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600">
-                <User className="h-5 w-5" />
-                <span className="text-xs">孩子档案</span>
-              </TabsTrigger>
-              <TabsTrigger value="reports" className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600">
-                <BookOpen className="h-5 w-5" />
-                <span className="text-xs">报告</span>
-              </TabsTrigger>
-              <TabsTrigger value="safety" className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600">
-                <Shield className="h-5 w-5" />
-                <span className="text-xs">安全</span>
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600">
-                <Settings className="h-5 w-5" />
-                <span className="text-xs">设置</span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
+      {/* Fixed Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 border-t border-blue-100 bg-white/90 backdrop-blur-md z-50">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-6 bg-transparent border-0 h-16 rounded-none">
+            <TabsTrigger value="dashboard" className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600">
+              <BarChart3 className="h-5 w-5" />
+              <span className="text-xs">首页</span>
+            </TabsTrigger>
+            <TabsTrigger value="device" className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600">
+              <Smartphone className="h-5 w-5" />
+              <span className="text-xs">设备</span>
+            </TabsTrigger>
+            <TabsTrigger value="profile" className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600">
+              <User className="h-5 w-5" />
+              <span className="text-xs">孩子档案</span>
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600">
+              <BookOpen className="h-5 w-5" />
+              <span className="text-xs">报告</span>
+            </TabsTrigger>
+            <TabsTrigger value="safety" className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600">
+              <Shield className="h-5 w-5" />
+              <span className="text-xs">安全</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600">
+              <Settings className="h-5 w-5" />
+              <span className="text-xs">设置</span>
+            </TabsTrigger>
+          </TabsList>
         </Tabs>
       </div>
     </div>
