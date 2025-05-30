@@ -12,8 +12,8 @@ const GoalDetail = () => {
   const navigate = useNavigate();
 
   // 模拟数据
-  const goalData = {
-    1: {
+  const goalData: Record<string, any> = {
+    "1": {
       title: "独立完成排队付款",
       description: "学习在商店或超市中独立完成排队和付款的社交技能",
       progress: 75,
@@ -59,7 +59,7 @@ const GoalDetail = () => {
     // 可以添加更多目标数据
   };
 
-  const goal = goalData[id as keyof typeof goalData];
+  const goal = id ? goalData[id] : null;
 
   if (!goal) {
     return (
