@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,20 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { useNavigate } from "react-router-dom";
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
 import { 
   Heart, 
   Smartphone, 
@@ -35,7 +48,60 @@ const Index = () => {
   const [reminderFrequency, setReminderFrequency] = useState("中频");
   const [reminderStyle, setReminderStyle] = useState("鼓励");
   const [volume, setVolume] = useState([60]);
+  const [reportType, setReportType] = useState("周报");
   const navigate = useNavigate();
+
+  // 图表数据
+  const weeklyProgressData = [
+    { name: '周一', 社交互动: 65, 情绪管理: 50, 生活自理: 70 },
+    { name: '周二', 社交互动: 68, 情绪管理: 55, 生活自理: 75 },
+    { name: '周三', 社交互动: 72, 情绪管理: 58, 生活自理: 78 },
+    { name: '周四', 社交互动: 70, 情绪管理: 62, 生活自理: 80 },
+    { name: '周五', 社交互动: 75, 情绪管理: 60, 生活自理: 85 },
+    { name: '周六', 社交互动: 78, 情绪管理: 65, 生活自理: 88 },
+    { name: '周日', 社交互动: 80, 情绪管理: 68, 生活自理: 90 }
+  ];
+
+  const dailyData = [
+    { name: '8:00', 社交互动: 60, 情绪管理: 45, 生活自理: 70 },
+    { name: '10:00', 社交互动: 65, 情绪管理: 50, 生活自理: 75 },
+    { name: '12:00', 社交互动: 70, 情绪管理: 55, 生活自理: 80 },
+    { name: '14:00', 社交互动: 75, 情绪管理: 60, 生活自理: 85 },
+    { name: '16:00', 社交互动: 80, 情绪管理: 65, 生活自理: 88 },
+    { name: '18:00', 社交互动: 85, 情绪管理: 70, 生活自理: 90 }
+  ];
+
+  const monthlyData = [
+    { name: '第1周', 社交互动: 55, 情绪管理: 40, 生活自理: 65 },
+    { name: '第2周', 社交互动: 62, 情绪管理: 48, 生活自理: 72 },
+    { name: '第3周', 社交互动: 68, 情绪管理: 55, 生活自理: 78 },
+    { name: '第4周', 社交互动: 75, 情绪管理: 62, 生活自理: 85 }
+  ];
+
+  const practiceFrequencyData = [
+    { skill: '排队付款', frequency: 12, success: 85 },
+    { skill: '公交礼仪', frequency: 8, success: 70 },
+    { skill: '主动问候', frequency: 15, success: 60 },
+    { skill: '情绪表达', frequency: 10, success: 75 }
+  ];
+
+  const successTrendData = [
+    { period: '第1天', success: 45 },
+    { period: '第2天', success: 52 },
+    { period: '第3天', success: 48 },
+    { period: '第4天', success: 58 },
+    { period: '第5天', success: 65 },
+    { period: '第6天', success: 70 },
+    { period: '第7天', success: 75 }
+  ];
+
+  const getReportData = () => {
+    switch (reportType) {
+      case "日报": return dailyData;
+      case "月报": return monthlyData;
+      default: return weeklyProgressData;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-amber-50 flex flex-col">
@@ -340,69 +406,184 @@ const Index = () => {
               </Card>
             </TabsContent>
 
-            {/* Reports Tab */}
+            {/* Reports Tab - 更新后的报告页面 */}
             <TabsContent value="reports" className="space-y-6 mt-0">
               <Card className="bg-white/80 backdrop-blur-sm border-0 rounded-3xl shadow-lg">
                 <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-3 text-gray-800 text-lg">
-                    <div className="bg-gradient-to-r from-orange-400 to-yellow-500 p-2 rounded-xl">
-                      <BookOpen className="h-5 w-5 text-white" />
-                    </div>
-                    数据报告与分析
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-3 text-gray-800 text-lg">
+                      <div className="bg-gradient-to-r from-orange-400 to-yellow-500 p-2 rounded-xl">
+                        <BookOpen className="h-5 w-5 text-white" />
+                      </div>
+                      数据报告与分析
+                    </CardTitle>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="rounded-2xl font-medium bg-white/70 border-gray-200 hover:bg-orange-50"
+                    >
+                      <Share2 className="h-4 w-4 mr-2" />
+                      分享报告
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {["日报", "周报", "月报"].map((type, index) => (
-                      <Card key={type} className="bg-white/70 border-0 rounded-2xl hover:shadow-md transition-all duration-300 cursor-pointer hover:bg-white/90">
-                        <CardContent className="p-6">
-                          <div className="text-center">
-                            <div className={`p-3 rounded-xl mb-3 mx-auto w-fit ${
-                              index === 0 ? "bg-orange-100" : index === 1 ? "bg-yellow-100" : "bg-rose-100"
-                            }`}>
-                              <BarChart3 className={`h-8 w-8 ${
-                                index === 0 ? "text-orange-600" : index === 1 ? "text-yellow-600" : "text-rose-600"
-                              }`} />
-                            </div>
-                            <h3 className="font-bold text-gray-800 mb-1">{type}</h3>
-                            <p className="text-sm text-gray-600">查看详细分析</p>
-                          </div>
-                        </CardContent>
-                      </Card>
+                  {/* 报告类型切换按钮 */}
+                  <div className="flex gap-2">
+                    {["日报", "周报", "月报"].map((type) => (
+                      <Button 
+                        key={type}
+                        variant={type === reportType ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setReportType(type)}
+                        className={`flex-1 rounded-2xl font-medium ${
+                          type === reportType 
+                            ? "bg-gradient-to-r from-orange-400 to-yellow-500 text-white border-0 shadow-lg" 
+                            : "bg-white/70 border-gray-200 text-gray-700 hover:bg-orange-50"
+                        }`}
+                      >
+                        {type}
+                      </Button>
                     ))}
                   </div>
 
+                  {/* 技能进步趋势图 */}
                   <div className="bg-white/70 rounded-2xl p-5">
-                    <h3 className="font-bold text-gray-800 mb-4">本周进展概览</h3>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center p-3 bg-white/50 rounded-xl">
-                        <span className="text-gray-700 font-medium">社交互动技能</span>
-                        <div className="flex items-center gap-2">
-                          <Progress value={75} className="w-20 h-2" />
-                          <span className="text-sm font-medium text-green-600">↗ +15%</span>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-white/50 rounded-xl">
-                        <span className="text-gray-700 font-medium">情绪管理能力</span>
-                        <div className="flex items-center gap-2">
-                          <Progress value={60} className="w-20 h-2" />
-                          <span className="text-sm font-medium text-green-600">↗ +8%</span>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-white/50 rounded-xl">
-                        <span className="text-gray-700 font-medium">生活自理能力</span>
-                        <div className="flex items-center gap-2">
-                          <Progress value={85} className="w-20 h-2" />
-                          <span className="text-sm font-medium text-green-600">↗ +12%</span>
-                        </div>
-                      </div>
+                    <h3 className="font-bold text-gray-800 mb-4">技能进步趋势</h3>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={getReportData()}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                          <XAxis dataKey="name" stroke="#666" fontSize={12} />
+                          <YAxis stroke="#666" fontSize={12} />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: '#fff', 
+                              border: '1px solid #e5e5e5', 
+                              borderRadius: '12px',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                            }} 
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="社交互动" 
+                            stroke="#fb923c" 
+                            strokeWidth={3}
+                            dot={{ fill: '#fb923c', strokeWidth: 2, r: 4 }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="情绪管理" 
+                            stroke="#06b6d4" 
+                            strokeWidth={3}
+                            dot={{ fill: '#06b6d4', strokeWidth: 2, r: 4 }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="生活自理" 
+                            stroke="#f43f5e" 
+                            strokeWidth={3}
+                            dot={{ fill: '#f43f5e', strokeWidth: 2, r: 4 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
                     </div>
                   </div>
 
-                  <Button variant="outline" className="w-full rounded-2xl h-12 font-medium bg-white/70 border-gray-200 hover:bg-orange-50">
-                    <Share2 className="h-4 w-4 mr-2" />
-                    分享报告给专业人士
-                  </Button>
+                  {/* 练习频率分析 */}
+                  <div className="bg-white/70 rounded-2xl p-5">
+                    <h3 className="font-bold text-gray-800 mb-4">练习频率分析</h3>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={practiceFrequencyData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                          <XAxis dataKey="skill" stroke="#666" fontSize={12} />
+                          <YAxis stroke="#666" fontSize={12} />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: '#fff', 
+                              border: '1px solid #e5e5e5', 
+                              borderRadius: '12px',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                            }} 
+                          />
+                          <Bar dataKey="frequency" fill="#fbbf24" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* 成功率变化趋势 */}
+                  <div className="bg-white/70 rounded-2xl p-5">
+                    <h3 className="font-bold text-gray-800 mb-4">成功率变化趋势</h3>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={successTrendData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                          <XAxis dataKey="period" stroke="#666" fontSize={12} />
+                          <YAxis stroke="#666" fontSize={12} />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: '#fff', 
+                              border: '1px solid #e5e5e5', 
+                              borderRadius: '12px',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                            }} 
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="success" 
+                            stroke="#10b981" 
+                            strokeWidth={3}
+                            dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* 本周进展概览 - 改为折线图 */}
+                  <div className="bg-white/70 rounded-2xl p-5">
+                    <h3 className="font-bold text-gray-800 mb-4">本周进展概览</h3>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={weeklyProgressData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                          <XAxis dataKey="name" stroke="#666" fontSize={12} />
+                          <YAxis stroke="#666" fontSize={12} />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: '#fff', 
+                              border: '1px solid #e5e5e5', 
+                              borderRadius: '12px',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                            }} 
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="社交互动" 
+                            stroke="#fb923c" 
+                            strokeWidth={2}
+                            dot={{ fill: '#fb923c', strokeWidth: 2, r: 3 }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="情绪管理" 
+                            stroke="#06b6d4" 
+                            strokeWidth={2}
+                            dot={{ fill: '#06b6d4', strokeWidth: 2, r: 3 }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="生活自理" 
+                            stroke="#f43f5e" 
+                            strokeWidth={2}
+                            dot={{ fill: '#f43f5e', strokeWidth: 2, r: 3 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
