@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import GoalDetail from "./pages/GoalDetail";
 import AddGoal from "./pages/AddGoal";
 import GoalBreakdown from "./pages/GoalBreakdown";
+import HistoryTracking from "./pages/HistoryTracking";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/goal-detail/:id" element={<GoalDetail />} />
           <Route path="/add-goal" element={<AddGoal />} />
           <Route path="/goal-breakdown" element={<GoalBreakdown />} />
+          <Route path="/history-tracking" element={<HistoryTracking />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

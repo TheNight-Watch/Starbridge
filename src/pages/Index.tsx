@@ -5,7 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
+import LocationMap from "@/components/LocationMap";
 import { 
   LineChart, 
   Line, 
@@ -15,10 +17,7 @@ import {
   Tooltip, 
   ResponsiveContainer,
   BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell
+  Bar
 } from 'recharts';
 import { 
   Heart, 
@@ -607,60 +606,68 @@ const Index = () => {
                         安全区域内
                       </Badge>
                     </div>
-                    <div className="bg-gradient-to-br from-orange-100 to-yellow-100 rounded-2xl p-8 text-center">
-                      <div className="bg-gradient-to-r from-orange-400 to-yellow-500 p-4 rounded-2xl w-fit mx-auto mb-3">
-                        <MapPin className="h-12 w-12 text-white" />
+                    <div className="space-y-3">
+                      <LocationMap height="250px" />
+                      <div className="text-center">
+                        <p className="text-gray-800 font-medium">当前位置：家附近公园</p>
+                        <p className="text-sm text-gray-600 mt-1">更新时间：2分钟前</p>
                       </div>
-                      <p className="text-gray-800 font-medium">当前位置：家附近公园</p>
-                      <p className="text-sm text-gray-600 mt-1">更新时间：2分钟前</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Button variant="outline" className="p-6 h-auto rounded-2xl bg-white/70 border-gray-200 hover:bg-orange-50">
-                      <div className="text-center">
-                        <div className="bg-blue-100 p-3 rounded-xl mb-2 mx-auto w-fit">
-                          <MapPin className="h-6 w-6 text-blue-600" />
-                        </div>
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center gap-3 p-4 h-16 rounded-2xl bg-white/70 border-gray-200 hover:bg-orange-50 justify-start"
+                      onClick={() => navigate('/history-tracking')}
+                    >
+                      <div className="bg-blue-100 p-2 rounded-xl">
+                        <MapPin className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div className="text-left">
                         <div className="font-medium text-gray-800">历史轨迹</div>
                         <div className="text-sm text-gray-500">查看活动路径</div>
                       </div>
                     </Button>
 
-                    <Button variant="outline" className="p-6 h-auto rounded-2xl bg-white/70 border-gray-200 hover:bg-orange-50">
-                      <div className="text-center">
-                        <div className="bg-green-100 p-3 rounded-xl mb-2 mx-auto w-fit">
-                          <Shield className="h-6 w-6 text-green-600" />
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          className="flex items-center gap-3 p-4 h-16 rounded-2xl bg-red-500 hover:bg-red-600 border-0 text-white justify-start"
+                        >
+                          <div className="bg-white/20 p-2 rounded-xl">
+                            <Phone className="h-5 w-5 text-white" />
+                          </div>
+                          <div className="text-left">
+                            <div className="font-medium text-white">紧急呼叫</div>
+                            <div className="text-sm text-red-100">一键求助</div>
+                          </div>
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="bg-white rounded-3xl border-0 shadow-xl">
+                        <DialogHeader>
+                          <DialogTitle className="text-center text-lg font-bold text-gray-800">紧急呼叫</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <p className="text-center text-gray-600">请选择呼叫方式，我们将立即为您提供帮助</p>
+                          <div className="space-y-3">
+                            <Button 
+                              className="w-full bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white border-0 rounded-2xl h-12 font-medium"
+                            >
+                              <Phone className="h-4 w-4 mr-2" />
+                              呼叫孩子
+                            </Button>
+                            <Button 
+                              className="w-full bg-gradient-to-r from-red-400 to-rose-500 hover:from-red-500 hover:to-rose-600 text-white border-0 rounded-2xl h-12 font-medium"
+                            >
+                              <AlertTriangle className="h-4 w-4 mr-2" />
+                              设备报警
+                            </Button>
+                          </div>
                         </div>
-                        <div className="font-medium text-gray-800">电子围栏</div>
-                        <div className="text-sm text-gray-500">设置安全区域</div>
-                      </div>
-                    </Button>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-2xl p-5">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="bg-orange-100 p-2 rounded-xl">
-                        <AlertTriangle className="h-5 w-5 text-orange-600" />
-                      </div>
-                      <h3 className="font-bold text-orange-800">紧急联系人</h3>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-white/70 rounded-xl">
-                        <span className="text-gray-700 font-medium">妈妈</span>
-                        <Button size="sm" className="bg-gradient-to-r from-orange-400 to-yellow-500 text-white border-0 rounded-xl hover:from-orange-500 hover:to-yellow-600">
-                          <Phone className="h-3 w-3 mr-1" />
-                          呼叫
-                        </Button>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-white/70 rounded-xl">
-                        <span className="text-gray-700 font-medium">爸爸</span>
-                        <Button size="sm" className="bg-gradient-to-r from-orange-400 to-yellow-500 text-white border-0 rounded-xl hover:from-orange-500 hover:to-yellow-600">
-                          <Phone className="h-3 w-3 mr-1" />
-                          呼叫
-                        </Button>
-                      </div>
-                    </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </CardContent>
               </Card>
