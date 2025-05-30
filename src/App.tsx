@@ -10,6 +10,11 @@ import GoalDetail from "./pages/GoalDetail";
 import AddGoal from "./pages/AddGoal";
 import GoalBreakdown from "./pages/GoalBreakdown";
 import HistoryTracking from "./pages/HistoryTracking";
+import AccountManagement from "./pages/AccountManagement";
+import NotificationSettings from "./pages/NotificationSettings";
+import PrivacySettings from "./pages/PrivacySettings";
+import HelpCenter from "./pages/HelpCenter";
+import CommunityResources from "./pages/CommunityResources";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +30,11 @@ const App = () => (
           <Route path="/add-goal" element={<AddGoal />} />
           <Route path="/goal-breakdown" element={<GoalBreakdown />} />
           <Route path="/history-tracking" element={<HistoryTracking />} />
+          <Route path="/account-management" element={<AccountManagement />} />
+          <Route path="/notification-settings" element={<NotificationSettings />} />
+          <Route path="/privacy-settings" element={<PrivacySettings />} />
+          <Route path="/help-center" element={<HelpCenter />} />
+          <Route path="/community-resources" element={<CommunityResources />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

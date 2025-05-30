@@ -685,13 +685,47 @@ const Index = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {[
-                    { icon: User, title: "账户管理", desc: "修改个人信息和密码", color: "bg-blue-100 text-blue-600" },
-                    { icon: Bell, title: "通知设置", desc: "管理推送通知偏好", color: "bg-green-100 text-green-600" },
-                    { icon: Shield, title: "隐私设置", desc: "数据授权和隐私管理", color: "bg-purple-100 text-purple-600" },
-                    { icon: BookOpen, title: "帮助中心", desc: "使用教程和常见问题", color: "bg-orange-100 text-orange-600" },
-                    { icon: Heart, title: "社区资源", desc: "康复支持和家长交流", color: "bg-rose-100 text-rose-600" },
+                    { 
+                      icon: User, 
+                      title: "账户管理", 
+                      desc: "修改个人信息和密码", 
+                      color: "bg-blue-100 text-blue-600",
+                      path: "/account-management"
+                    },
+                    { 
+                      icon: Bell, 
+                      title: "通知设置", 
+                      desc: "管理推送通知偏好", 
+                      color: "bg-green-100 text-green-600",
+                      path: "/notification-settings"
+                    },
+                    { 
+                      icon: Shield, 
+                      title: "隐私设置", 
+                      desc: "数据授权和隐私管理", 
+                      color: "bg-purple-100 text-purple-600",
+                      path: "/privacy-settings"
+                    },
+                    { 
+                      icon: BookOpen, 
+                      title: "帮助中心", 
+                      desc: "使用教程和常见问题", 
+                      color: "bg-orange-100 text-orange-600",
+                      path: "/help-center"
+                    },
+                    { 
+                      icon: Heart, 
+                      title: "社区资源", 
+                      desc: "康复支持和家长交流", 
+                      color: "bg-rose-100 text-rose-600",
+                      path: "/community-resources"
+                    },
                   ].map((item, index) => (
-                    <div key={index} className="flex items-center gap-4 p-4 bg-white/70 rounded-2xl hover:bg-white/90 transition-all duration-300 cursor-pointer">
+                    <div 
+                      key={index} 
+                      className="flex items-center gap-4 p-4 bg-white/70 rounded-2xl hover:bg-white/90 transition-all duration-300 cursor-pointer"
+                      onClick={() => navigate(item.path)}
+                    >
                       <div className={`p-2 rounded-xl ${item.color}`}>
                         <item.icon className="h-5 w-5" />
                       </div>
