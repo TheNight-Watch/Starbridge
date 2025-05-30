@@ -1,9 +1,12 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Slider } from "@/components/ui/slider";
+import { useNavigate } from "react-router-dom";
 import { 
   Heart, 
   Smartphone, 
@@ -29,6 +32,10 @@ import {
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [reminderFrequency, setReminderFrequency] = useState("中频");
+  const [reminderStyle, setReminderStyle] = useState("鼓励");
+  const [volume, setVolume] = useState([60]);
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-amber-50 flex flex-col">
@@ -113,7 +120,6 @@ const Index = () => {
                 </Card>
               </div>
 
-              {/* Today's Activity Timeline */}
               <Card className="bg-white/80 backdrop-blur-sm border-0 rounded-3xl shadow-lg">
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center gap-3 text-gray-800 text-lg">
@@ -204,13 +210,14 @@ const Index = () => {
                       <div className="space-y-3">
                         <label className="text-sm font-medium text-gray-700">提示频率</label>
                         <div className="flex gap-2">
-                          {["低频", "中频", "高频"].map((freq, index) => (
+                          {["低频", "中频", "高频"].map((freq) => (
                             <Button 
                               key={freq}
-                              variant={freq === "中频" ? "default" : "outline"}
+                              variant={freq === reminderFrequency ? "default" : "outline"}
                               size="sm"
+                              onClick={() => setReminderFrequency(freq)}
                               className={`flex-1 rounded-2xl font-medium ${
-                                freq === "中频" 
+                                freq === reminderFrequency 
                                   ? "bg-gradient-to-r from-orange-400 to-yellow-500 text-white border-0 shadow-lg" 
                                   : "bg-white/70 border-gray-200 text-gray-700 hover:bg-orange-50"
                               }`}
@@ -227,10 +234,11 @@ const Index = () => {
                           {["温和", "鼓励", "指导"].map((style) => (
                             <Button 
                               key={style}
-                              variant={style === "鼓励" ? "default" : "outline"}
+                              variant={style === reminderStyle ? "default" : "outline"}
                               size="sm"
+                              onClick={() => setReminderStyle(style)}
                               className={`flex-1 rounded-2xl font-medium ${
-                                style === "鼓励" 
+                                style === reminderStyle 
                                   ? "bg-gradient-to-r from-orange-400 to-yellow-500 text-white border-0 shadow-lg" 
                                   : "bg-white/70 border-gray-200 text-gray-700 hover:bg-orange-50"
                               }`}
@@ -248,8 +256,14 @@ const Index = () => {
                         <div className="bg-orange-100 p-2 rounded-xl">
                           <Volume2 className="h-4 w-4 text-orange-600" />
                         </div>
-                        <Progress value={60} className="flex-1 h-2" />
-                        <span className="text-sm font-medium text-gray-600 min-w-[40px]">60%</span>
+                        <Slider 
+                          value={volume} 
+                          onValueChange={setVolume}
+                          max={100} 
+                          step={1} 
+                          className="flex-1"
+                        />
+                        <span className="text-sm font-medium text-gray-600 min-w-[40px]">{volume[0]}%</span>
                       </div>
                     </div>
                   </div>
@@ -292,11 +306,15 @@ const Index = () => {
                     </h3>
                     
                     {[
-                      { goal: "独立完成排队付款", progress: 75, status: "进行中" },
-                      { goal: "公交车上保持安静", progress: 60, status: "进行中" },
-                      { goal: "主动与同龄人打招呼", progress: 40, status: "进行中" },
+                      { id: 1, goal: "独立完成排队付款", progress: 75, status: "进行中" },
+                      { id: 2, goal: "公交车上保持安静", progress: 60, status: "进行中" },
+                      { id: 3, goal: "主动与同龄人打招呼", progress: 40, status: "进行中" },
                     ].map((item, index) => (
-                      <div key={index} className="bg-white/70 rounded-2xl p-5">
+                      <div 
+                        key={index} 
+                        className="bg-white/70 rounded-2xl p-5 cursor-pointer hover:bg-white/90 transition-all duration-300"
+                        onClick={() => navigate(`/goal-detail/${item.id}`)}
+                      >
                         <div className="flex items-center justify-between mb-3">
                           <span className="font-medium text-gray-800">{item.goal}</span>
                           <Badge className="bg-gradient-to-r from-blue-400 to-cyan-500 text-white border-0 rounded-full px-3 py-1">
@@ -311,7 +329,10 @@ const Index = () => {
                     ))}
                   </div>
 
-                  <Button className="w-full bg-gradient-to-r from-orange-400 to-yellow-500 hover:from-orange-500 hover:to-yellow-600 text-white border-0 rounded-2xl h-12 font-medium shadow-lg">
+                  <Button 
+                    className="w-full bg-gradient-to-r from-orange-400 to-yellow-500 hover:from-orange-500 hover:to-yellow-600 text-white border-0 rounded-2xl h-12 font-medium shadow-lg"
+                    onClick={() => navigate('/add-goal')}
+                  >
                     <Target className="h-4 w-4 mr-2" />
                     添加新目标
                   </Button>
@@ -386,7 +407,6 @@ const Index = () => {
               </Card>
             </TabsContent>
 
-            {/* Safety Tab */}
             <TabsContent value="safety" className="space-y-6 mt-0">
               <Card className="bg-white/80 backdrop-blur-sm border-0 rounded-3xl shadow-lg">
                 <CardHeader className="pb-4">
@@ -465,7 +485,6 @@ const Index = () => {
               </Card>
             </TabsContent>
 
-            {/* Settings Tab */}
             <TabsContent value="settings" className="space-y-6 mt-0">
               <Card className="bg-white/80 backdrop-blur-sm border-0 rounded-3xl shadow-lg">
                 <CardHeader className="pb-4">
