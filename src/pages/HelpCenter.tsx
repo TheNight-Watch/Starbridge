@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,7 +48,7 @@ const HelpCenter = () => {
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => navigate('/')}
+              onClick={() => navigate(-1)}
               className="rounded-full"
             >
               <ArrowLeft className="h-4 w-4" />
