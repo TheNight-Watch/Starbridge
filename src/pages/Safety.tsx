@@ -19,12 +19,49 @@ import {
   BookOpen,
   AlertTriangle,
   Phone,
-  Clock
+  Clock,
+  FileText
 } from "lucide-react";
 
 const Safety = () => {
   const [activeTab, setActiveTab] = useState("safety");
   const navigate = useNavigate();
+
+  // 活动记录数据
+  const activityData = [
+    {
+      time: "14:30",
+      activity: "到达公园",
+      location: "中心公园",
+      status: "安全",
+      icon: MapPin,
+      color: "text-green-600 bg-green-100"
+    },
+    {
+      time: "14:15",
+      activity: "离开家",
+      location: "家",
+      status: "正常",
+      icon: Clock,
+      color: "text-blue-600 bg-blue-100"
+    },
+    {
+      time: "13:45",
+      activity: "午餐时间",
+      location: "家",
+      status: "完成",
+      icon: Heart,
+      color: "text-orange-600 bg-orange-100"
+    },
+    {
+      time: "12:30",
+      activity: "学习时间",
+      location: "家",
+      status: "完成",
+      icon: BookOpen,
+      color: "text-purple-600 bg-purple-100"
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-amber-50 flex flex-col">
@@ -141,6 +178,48 @@ const Safety = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* 活动记录板块 */}
+              <Card className="bg-white/80 backdrop-blur-sm border-0 rounded-3xl shadow-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-3 text-gray-800 text-lg">
+                    <div className="bg-gradient-to-r from-orange-400 to-yellow-500 p-2 rounded-xl">
+                      <Clock className="h-5 w-5 text-white" />
+                    </div>
+                    活动记录
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    {activityData.map((item, index) => (
+                      <div key={index} className="flex items-center gap-4 p-4 bg-white/70 rounded-2xl">
+                        <div className={`p-2 rounded-xl ${item.color}`}>
+                          <item.icon className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-gray-800">{item.activity}</span>
+                            <span className="text-sm text-gray-500">{item.time}</span>
+                          </div>
+                          <div className="flex items-center justify-between mt-1">
+                            <span className="text-sm text-gray-600">{item.location}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {item.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <Button 
+                    variant="outline"
+                    className="w-full mt-4 rounded-2xl bg-white/70 border-gray-200 hover:bg-orange-50"
+                    onClick={() => navigate('/history-tracking')}
+                  >
+                    查看详细记录
+                  </Button>
+                </CardContent>
+              </Card>
             </TabsContent>
           </div>
         </Tabs>
@@ -151,12 +230,12 @@ const Safety = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-5 bg-transparent border-0 h-20 rounded-none">
             <TabsTrigger 
-              value="dashboard" 
+              value="reports" 
               className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-gradient-to-t data-[state=active]:from-orange-50 data-[state=active]:to-yellow-50 data-[state=active]:text-orange-600 rounded-2xl mx-1"
               onClick={() => navigate('/dashboard')}
             >
-              <BarChart3 className="h-4 w-4" />
-              <span className="text-xs font-medium">首页</span>
+              <FileText className="h-4 w-4" />
+              <span className="text-xs font-medium">报告</span>
             </TabsTrigger>
             
             <TabsTrigger 

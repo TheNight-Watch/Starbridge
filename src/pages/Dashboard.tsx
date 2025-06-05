@@ -1,11 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Slider } from "@/components/ui/slider";
 import { useNavigate } from "react-router-dom";
 import { 
   LineChart, 
@@ -37,15 +35,16 @@ import {
   Share2,
   BookOpen,
   Target,
-  Volume2,
-  FileText
+  FileText,
+  ShoppingBag,
+  Bus,
+  Users
 } from "lucide-react";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("reports");
   const [reminderFrequency, setReminderFrequency] = useState("中频");
   const [reminderStyle, setReminderStyle] = useState("鼓励");
-  const [volume, setVolume] = useState([60]);
   const navigate = useNavigate();
 
   const weeklyProgressData = [
@@ -58,41 +57,43 @@ const Dashboard = () => {
     { name: '周日', 社交互动: 80, 情绪管理: 68, 生活自理: 90 }
   ];
 
-  const dailyData = [
-    { name: '8:00', 社交互动: 60, 情绪管理: 45, 生活自理: 70 },
-    { name: '10:00', 社交互动: 65, 情绪管理: 50, 生活自理: 75 },
-    { name: '12:00', 社交互动: 70, 情绪管理: 55, 生活自理: 80 },
-    { name: '14:00', 社交互动: 75, 情绪管理: 60, 生活自理: 85 },
-    { name: '16:00', 社交互动: 80, 情绪管理: 65, 生活自理: 88 },
-    { name: '18:00', 社交互动: 85, 情绪管理: 70, 生活自理: 90 }
+  // 场景数据
+  const scenarioData = [
+    { 
+      id: 1, 
+      name: "购物场景", 
+      progress: 75, 
+      status: "进行中",
+      icon: ShoppingBag,
+      color: "bg-blue-100 text-blue-600",
+      description: "独立完成排队付款、选择商品"
+    },
+    { 
+      id: 2, 
+      name: "乘车场景", 
+      progress: 60, 
+      status: "进行中",
+      icon: Bus,
+      color: "bg-green-100 text-green-600",
+      description: "公交车上保持安静、主动让座"
+    },
+    { 
+      id: 3, 
+      name: "社交场景", 
+      progress: 40, 
+      status: "进行中",
+      icon: Users,
+      color: "bg-purple-100 text-purple-600",
+      description: "主动与同龄人打招呼、参与集体活动"
+    },
   ];
 
-  const monthlyData = [
-    { name: '第1周', 社交互动: 55, 情绪管理: 40, 生活自理: 65 },
-    { name: '第2周', 社交互动: 62, 情绪管理: 48, 生活自理: 72 },
-    { name: '第3周', 社交互动: 68, 情绪管理: 55, 生活自理: 78 },
-    { name: '第4周', 社交互动: 75, 情绪管理: 62, 生活自理: 85 }
-  ];
-
-  const practiceFrequencyData = [
-    { skill: '排队付款', frequency: 12, success: 85 },
-    { skill: '公交礼仪', frequency: 8, success: 70 },
-    { skill: '主动问候', frequency: 15, success: 60 },
-    { skill: '情绪表达', frequency: 10, success: 75 }
-  ];
-
-  const successTrendData = [
-    { period: '第1天', success: 45 },
-    { period: '第2天', success: 52 },
-    { period: '第3天', success: 48 },
-    { period: '第4天', success: 58 },
-    { period: '第5天', success: 65 },
-    { period: '第6天', success: 70 },
-    { period: '第7天', success: 75 }
-  ];
-
-  const getReportData = () => {
-    return weeklyProgressData;
+  const handleTabNavigation = (tabValue: string) => {
+    if (tabValue === "safety") {
+      navigate('/');
+    } else {
+      setActiveTab(tabValue);
+    }
   };
 
   return (
@@ -122,7 +123,7 @@ const Dashboard = () => {
 
       {/* Main Content - takes remaining space, with bottom padding for fixed nav */}
       <div className="flex-1 overflow-auto pb-20">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
+        <Tabs value={activeTab} onValueChange={handleTabNavigation} className="h-full">
           {/* Tab Content */}
           <div className="container mx-auto px-4 py-6">
             {/* Reports Tab */}
@@ -365,23 +366,6 @@ const Dashboard = () => {
                         </div>
                       </div>
                     </div>
-
-                    <div className="space-y-3">
-                      <label className="text-sm font-medium text-gray-700">音量调节</label>
-                      <div className="flex items-center gap-3 p-4 bg-white/70 rounded-2xl">
-                        <div className="bg-orange-100 p-2 rounded-xl">
-                          <Volume2 className="h-4 w-4 text-orange-600" />
-                        </div>
-                        <Slider 
-                          value={volume} 
-                          onValueChange={setVolume}
-                          max={100} 
-                          step={1} 
-                          className="flex-1"
-                        />
-                        <span className="text-sm font-medium text-gray-600 min-w-[40px]">{volume[0]}%</span>
-                      </div>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -395,7 +379,7 @@ const Dashboard = () => {
                     <div className="bg-gradient-to-r from-orange-400 to-yellow-500 p-2 rounded-xl">
                       <User className="h-5 w-5 text-white" />
                     </div>
-                    孩子档案与学习目标
+                    孩子档案与学习场景
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -418,28 +402,32 @@ const Dashboard = () => {
                       <div className="bg-blue-100 p-2 rounded-xl">
                         <Target className="h-4 w-4 text-blue-600" />
                       </div>
-                      当前学习目标
+                      当前学习场景
                     </h3>
                     
-                    {[
-                      { id: 1, goal: "独立完成排队付款", progress: 75, status: "进行中" },
-                      { id: 2, goal: "公交车上保持安静", progress: 60, status: "进行中" },
-                      { id: 3, goal: "主动与同龄人打招呼", progress: 40, status: "进行中" },
-                    ].map((item, index) => (
+                    {scenarioData.map((scenario, index) => (
                       <div 
                         key={index} 
                         className="bg-white/70 rounded-2xl p-5 cursor-pointer hover:bg-white/90 transition-all duration-300"
-                        onClick={() => navigate(`/goal-detail/${item.id}`)}
+                        onClick={() => navigate(`/goal-detail/${scenario.id}`)}
                       >
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="font-medium text-gray-800">{item.goal}</span>
-                          <Badge className="bg-gradient-to-r from-blue-400 to-cyan-500 text-white border-0 rounded-full px-3 py-1">
-                            {item.status}
-                          </Badge>
+                        <div className="flex items-center gap-4 mb-3">
+                          <div className={`p-2 rounded-xl ${scenario.color}`}>
+                            <scenario.icon className="h-5 w-5" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium text-gray-800">{scenario.name}</span>
+                              <Badge className="bg-gradient-to-r from-blue-400 to-cyan-500 text-white border-0 rounded-full px-3 py-1">
+                                {scenario.status}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">{scenario.description}</p>
+                          </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <Progress value={item.progress} className="flex-1 h-2" />
-                          <span className="text-sm font-medium text-gray-600">{item.progress}%</span>
+                          <Progress value={scenario.progress} className="flex-1 h-2" />
+                          <span className="text-sm font-medium text-gray-600">{scenario.progress}%</span>
                         </div>
                       </div>
                     ))}
@@ -450,7 +438,7 @@ const Dashboard = () => {
                     onClick={() => navigate('/add-goal')}
                   >
                     <Target className="h-4 w-4 mr-2" />
-                    添加新目标
+                    添加新场景
                   </Button>
                 </CardContent>
               </Card>
@@ -525,9 +513,9 @@ const Dashboard = () => {
         </Tabs>
       </div>
 
-      {/* Fixed Bottom Navigation - Updated with Safety as center home */}
+      {/* Fixed Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-orange-100 bg-white/95 backdrop-blur-md z-50">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={handleTabNavigation}>
           <TabsList className="grid w-full grid-cols-5 bg-transparent border-0 h-20 rounded-none">
             <TabsTrigger 
               value="reports" 
@@ -549,7 +537,6 @@ const Dashboard = () => {
             <TabsTrigger 
               value="safety" 
               className="flex flex-col items-center gap-1 py-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-orange-400 data-[state=active]:to-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-2xl mx-1 relative transform data-[state=active]:scale-110 data-[state=active]:-translate-y-1 transition-all duration-300"
-              onClick={() => navigate('/')}
             >
               <div className="bg-gradient-to-br from-orange-400 to-yellow-500 p-3 rounded-full shadow-md">
                 <Shield className="h-6 w-6 text-white" />
