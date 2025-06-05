@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,11 +37,12 @@ import {
   Share2,
   BookOpen,
   Target,
-  Volume2
+  Volume2,
+  FileText
 } from "lucide-react";
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("reports");
   const [reminderFrequency, setReminderFrequency] = useState("中频");
   const [reminderStyle, setReminderStyle] = useState("鼓励");
   const [volume, setVolume] = useState([60]);
@@ -123,18 +125,18 @@ const Dashboard = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
           {/* Tab Content */}
           <div className="container mx-auto px-4 py-6">
-            {/* Dashboard Tab */}
-            <TabsContent value="dashboard" className="space-y-6 mt-0">
+            {/* Reports Tab */}
+            <TabsContent value="reports" className="space-y-6 mt-0">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="bg-gradient-to-br from-orange-400 to-orange-500 text-white border-0 rounded-3xl shadow-xl overflow-hidden">
                   <CardContent className="p-6 relative">
                     <div className="flex items-center justify-between relative z-10">
                       <div>
-                        <p className="text-orange-100 text-sm font-medium">今日活动时长</p>
-                        <p className="text-3xl font-bold mt-1">6小时23分</p>
+                        <p className="text-orange-100 text-sm font-medium">本周进步</p>
+                        <p className="text-3xl font-bold mt-1">+15%</p>
                       </div>
                       <div className="bg-white/20 p-3 rounded-2xl">
-                        <Clock className="h-8 w-8 text-white" />
+                        <TrendingUp className="h-8 w-8 text-white" />
                       </div>
                     </div>
                     <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full"></div>
@@ -146,11 +148,11 @@ const Dashboard = () => {
                   <CardContent className="p-6 relative">
                     <div className="flex items-center justify-between relative z-10">
                       <div>
-                        <p className="text-yellow-100 text-sm font-medium">成功互动次数</p>
-                        <p className="text-3xl font-bold mt-1">24次</p>
+                        <p className="text-yellow-100 text-sm font-medium">成功率</p>
+                        <p className="text-3xl font-bold mt-1">78%</p>
                       </div>
                       <div className="bg-white/20 p-3 rounded-2xl">
-                        <TrendingUp className="h-8 w-8 text-white" />
+                        <Award className="h-8 w-8 text-white" />
                       </div>
                     </div>
                     <div className="absolute -left-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full"></div>
@@ -162,11 +164,11 @@ const Dashboard = () => {
                   <CardContent className="p-6 relative">
                     <div className="flex items-center justify-between relative z-10">
                       <div>
-                        <p className="text-rose-100 text-sm font-medium">本周进步评分</p>
-                        <p className="text-3xl font-bold mt-1">8.6分</p>
+                        <p className="text-rose-100 text-sm font-medium">活跃天数</p>
+                        <p className="text-3xl font-bold mt-1">27天</p>
                       </div>
                       <div className="bg-white/20 p-3 rounded-2xl">
-                        <Award className="h-8 w-8 text-white" />
+                        <Calendar className="h-8 w-8 text-white" />
                       </div>
                     </div>
                     <div className="absolute -right-4 -top-4 w-20 h-20 bg-white/10 rounded-full"></div>
@@ -179,41 +181,100 @@ const Dashboard = () => {
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center gap-3 text-gray-800 text-lg">
                     <div className="bg-gradient-to-r from-orange-400 to-yellow-500 p-2 rounded-xl">
-                      <Calendar className="h-5 w-5 text-white" />
+                      <BarChart3 className="h-5 w-5 text-white" />
                     </div>
-                    今日活动时间轴
+                    技能发展趋势
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={weeklyProgressData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis dataKey="name" stroke="#666" />
+                        <YAxis stroke="#666" />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'white', 
+                            border: 'none', 
+                            borderRadius: '12px', 
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' 
+                          }} 
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="社交互动" 
+                          stroke="#fb923c" 
+                          strokeWidth={3}
+                          dot={{ fill: '#fb923c', strokeWidth: 2, r: 4 }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="情绪管理" 
+                          stroke="#fbbf24" 
+                          strokeWidth={3}
+                          dot={{ fill: '#fbbf24', strokeWidth: 2, r: 4 }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="生活自理" 
+                          stroke="#f472b6" 
+                          strokeWidth={3}
+                          dot={{ fill: '#f472b6', strokeWidth: 2, r: 4 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white/80 backdrop-blur-sm border-0 rounded-3xl shadow-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-3 text-gray-800 text-lg">
+                    <div className="bg-gradient-to-r from-orange-400 to-yellow-500 p-2 rounded-xl">
+                      <FileText className="h-5 w-5 text-white" />
+                    </div>
+                    详细报告
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-4">
-                    {[
-                      { time: "08:30", activity: "早餐时光", status: "成功", desc: "独立完成洗手和准备餐具", color: "from-green-400 to-emerald-500" },
-                      { time: "10:15", activity: "公园游玩", status: "良好", desc: "与其他小朋友友好互动", color: "from-blue-400 to-cyan-500" },
-                      { time: "12:00", activity: "午餐时间", status: "需关注", desc: "用餐礼仪需要提醒", color: "from-amber-400 to-orange-500" },
-                      { time: "14:30", activity: "超市购物", status: "成功", desc: "成功完成排队和付款", color: "from-green-400 to-emerald-500" },
-                    ].map((item, index) => (
-                      <div key={index} className="flex items-center space-x-4 p-4 rounded-2xl bg-white/60 hover:bg-white/80 transition-all duration-300">
-                        <div className="text-sm font-bold text-gray-700 w-16 bg-gray-100 rounded-xl px-3 py-2 text-center">
-                          {item.time}
+                  {[
+                    { 
+                      title: "社交技能评估报告", 
+                      date: "2024年3月", 
+                      progress: 85, 
+                      desc: "主动交流能力显著提升"
+                    },
+                    { 
+                      title: "情绪管理能力报告", 
+                      date: "2024年3月", 
+                      progress: 70, 
+                      desc: "自我调节能力稳步改善"
+                    },
+                    { 
+                      title: "生活自理能力报告", 
+                      date: "2024年3月", 
+                      progress: 90, 
+                      desc: "独立完成日常任务表现优秀"
+                    }
+                  ].map((report, index) => (
+                    <div key={index} className="bg-white/70 rounded-2xl p-5 hover:bg-white/90 transition-all duration-300">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <h3 className="font-medium text-gray-800">{report.title}</h3>
+                          <p className="text-sm text-gray-600">{report.date}</p>
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className="font-bold text-gray-800">{item.activity}</span>
-                            <Badge 
-                              className={`text-xs font-medium text-white border-0 px-3 py-1 rounded-full bg-gradient-to-r ${
-                                item.status === "成功" ? "from-green-400 to-emerald-500" : 
-                                item.status === "良好" ? "from-blue-400 to-cyan-500" : 
-                                "from-amber-400 to-orange-500"
-                              }`}
-                            >
-                              {item.status}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-600">{item.desc}</p>
-                        </div>
+                        <Badge className="bg-gradient-to-r from-blue-400 to-cyan-500 text-white border-0 rounded-full px-3 py-1">
+                          查看详情
+                        </Badge>
                       </div>
-                    ))}
-                  </div>
+                      <p className="text-sm text-gray-600 mb-3">{report.desc}</p>
+                      <div className="flex items-center gap-3">
+                        <Progress value={report.progress} className="flex-1 h-2" />
+                        <span className="text-sm font-medium text-gray-600">{report.progress}%</span>
+                      </div>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -469,11 +530,11 @@ const Dashboard = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-5 bg-transparent border-0 h-20 rounded-none">
             <TabsTrigger 
-              value="dashboard" 
+              value="reports" 
               className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-gradient-to-t data-[state=active]:from-orange-50 data-[state=active]:to-yellow-50 data-[state=active]:text-orange-600 rounded-2xl mx-1"
             >
-              <BarChart3 className="h-4 w-4" />
-              <span className="text-xs font-medium">首页</span>
+              <FileText className="h-4 w-4" />
+              <span className="text-xs font-medium">报告</span>
             </TabsTrigger>
             
             <TabsTrigger 
