@@ -4,7 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import Safety from "./pages/Safety";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import GoalDetail from "./pages/GoalDetail";
 import AddGoal from "./pages/AddGoal";
@@ -25,7 +26,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Safety />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/goal-detail/:id" element={<GoalDetail />} />
           <Route path="/add-goal" element={<AddGoal />} />
           <Route path="/goal-breakdown" element={<GoalBreakdown />} />
