@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useNavigate } from "react-router-dom";
 import LocationMap from "@/components/LocationMap";
 import { 
@@ -62,6 +63,59 @@ const Safety = () => {
       color: "text-purple-600 bg-purple-100"
     }
   ];
+
+  // 孩子档案数据
+  const profileData = {
+    basicInfo: {
+      name: "小明",
+      age: "8岁",
+      gender: "男",
+      diagnosisDate: "2023年3月"
+    },
+    dsm5Level: {
+      level: "二级：需要大量支持",
+      description: "社交沟通缺陷显著；受限重复行为频繁且明显干扰",
+      details: [
+        "社交沟通有明显困难",
+        "受限重复行为干扰功能",
+        "需要结构化支持环境"
+      ]
+    },
+    cognitiveLevel: {
+      level: "边缘智力",
+      iqRange: "70-85",
+      description: "认知能力略低于平均水平，但具备基本学习能力"
+    },
+    languageAbility: {
+      level: "有口语但能力有限",
+      description: "仿说、单词、短语、句子但语用异常",
+      functionalCommunication: "部分功能性沟通能力"
+    },
+    sensoryProcessing: {
+      patterns: [
+        {
+          type: "感觉过度反应",
+          description: "对普通刺激反应强烈痛苦",
+          examples: "对大声音、强光敏感"
+        },
+        {
+          type: "感觉寻求",
+          description: "主动寻求大量/特定刺激",
+          examples: "喜欢旋转、摇摆动作"
+        }
+      ]
+    }
+  };
+
+  const handleTabNavigation = (tabValue: string) => {
+    if (tabValue === "safety") {
+      // Stay on current page
+      setActiveTab(tabValue);
+    } else {
+      // Navigate to dashboard with the specific tab
+      navigate('/dashboard', { state: { activeTab: tabValue } });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-amber-50 flex flex-col">
@@ -221,18 +275,169 @@ const Safety = () => {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* Child Profile Tab */}
+            <TabsContent value="profile" className="space-y-6 mt-0">
+              <Card className="bg-white/80 backdrop-blur-sm border-0 rounded-3xl shadow-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-3 text-gray-800 text-lg">
+                    <div className="bg-gradient-to-r from-orange-400 to-yellow-500 p-2 rounded-xl">
+                      <User className="h-5 w-5 text-white" />
+                    </div>
+                    孩子档案
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* 基本信息 */}
+                  <div className="bg-white/70 rounded-2xl p-5">
+                    <h3 className="font-bold text-gray-800 mb-4">基本信息</h3>
+                    <Table>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell className="font-medium text-gray-700">姓名</TableCell>
+                          <TableCell>{profileData.basicInfo.name}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium text-gray-700">年龄</TableCell>
+                          <TableCell>{profileData.basicInfo.age}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium text-gray-700">性别</TableCell>
+                          <TableCell>{profileData.basicInfo.gender}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium text-gray-700">诊断日期</TableCell>
+                          <TableCell>{profileData.basicInfo.diagnosisDate}</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* DSM-5 诊断严重程度等级 */}
+                  <div className="bg-white/70 rounded-2xl p-5">
+                    <h3 className="font-bold text-gray-800 mb-4">DSM-5 诊断严重程度等级</h3>
+                    <Table>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell className="font-medium text-gray-700">当前等级</TableCell>
+                          <TableCell>
+                            <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                              {profileData.dsm5Level.level}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium text-gray-700">描述</TableCell>
+                          <TableCell>{profileData.dsm5Level.description}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium text-gray-700">具体表现</TableCell>
+                          <TableCell>
+                            <ul className="list-disc list-inside space-y-1 text-sm">
+                              {profileData.dsm5Level.details.map((detail, index) => (
+                                <li key={index}>{detail}</li>
+                              ))}
+                            </ul>
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* 认知水平/智力功能 */}
+                  <div className="bg-white/70 rounded-2xl p-5">
+                    <h3 className="font-bold text-gray-800 mb-4">认知水平 / 智力功能</h3>
+                    <Table>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell className="font-medium text-gray-700">等级</TableCell>
+                          <TableCell>
+                            <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                              {profileData.cognitiveLevel.level}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium text-gray-700">IQ范围</TableCell>
+                          <TableCell>{profileData.cognitiveLevel.iqRange}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium text-gray-700">描述</TableCell>
+                          <TableCell>{profileData.cognitiveLevel.description}</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* 语言能力 */}
+                  <div className="bg-white/70 rounded-2xl p-5">
+                    <h3 className="font-bold text-gray-800 mb-4">语言能力</h3>
+                    <Table>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell className="font-medium text-gray-700">等级</TableCell>
+                          <TableCell>
+                            <Badge className="bg-green-100 text-green-800 border-green-200">
+                              {profileData.languageAbility.level}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium text-gray-700">描述</TableCell>
+                          <TableCell>{profileData.languageAbility.description}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium text-gray-700">功能性沟通</TableCell>
+                          <TableCell>{profileData.languageAbility.functionalCommunication}</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* 感官处理 */}
+                  <div className="bg-white/70 rounded-2xl p-5">
+                    <h3 className="font-bold text-gray-800 mb-4">感官处理</h3>
+                    <div className="space-y-4">
+                      {profileData.sensoryProcessing.patterns.map((pattern, index) => (
+                        <div key={index} className="border border-gray-200 rounded-xl p-4">
+                          <Table>
+                            <TableBody>
+                              <TableRow>
+                                <TableCell className="font-medium text-gray-700">模式类型</TableCell>
+                                <TableCell>
+                                  <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+                                    {pattern.type}
+                                  </Badge>
+                                </TableCell>
+                              </TableRow>
+                              <TableRow>
+                                <TableCell className="font-medium text-gray-700">描述</TableCell>
+                                <TableCell>{pattern.description}</TableCell>
+                              </TableRow>
+                              <TableRow>
+                                <TableCell className="font-medium text-gray-700">具体表现</TableCell>
+                                <TableCell>{pattern.examples}</TableCell>
+                              </TableRow>
+                            </TableBody>
+                          </Table>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
           </div>
         </Tabs>
       </div>
 
       {/* Fixed Bottom Navigation - Updated with Safety as center home */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-orange-100 bg-white/95 backdrop-blur-md z-50">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={handleTabNavigation}>
           <TabsList className="grid w-full grid-cols-5 bg-transparent border-0 h-20 rounded-none">
             <TabsTrigger 
               value="reports" 
               className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-gradient-to-t data-[state=active]:from-orange-50 data-[state=active]:to-yellow-50 data-[state=active]:text-orange-600 rounded-2xl mx-1"
-              onClick={() => navigate('/dashboard')}
             >
               <FileText className="h-4 w-4" />
               <span className="text-xs font-medium">报告</span>
@@ -241,7 +446,6 @@ const Safety = () => {
             <TabsTrigger 
               value="device" 
               className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-gradient-to-t data-[state=active]:from-orange-50 data-[state=active]:to-yellow-50 data-[state=active]:text-orange-600 rounded-2xl mx-1"
-              onClick={() => navigate('/dashboard')}
             >
               <Smartphone className="h-4 w-4" />
               <span className="text-xs font-medium">设备</span>
@@ -261,7 +465,6 @@ const Safety = () => {
             <TabsTrigger 
               value="profile" 
               className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-gradient-to-t data-[state=active]:from-orange-50 data-[state=active]:to-yellow-50 data-[state=active]:text-orange-600 rounded-2xl mx-1"
-              onClick={() => navigate('/dashboard')}
             >
               <User className="h-4 w-4" />
               <span className="text-xs font-medium">档案</span>
@@ -270,7 +473,6 @@ const Safety = () => {
             <TabsTrigger 
               value="settings" 
               className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-gradient-to-t data-[state=active]:from-orange-50 data-[state=active]:to-yellow-50 data-[state=active]:text-orange-600 rounded-2xl mx-1"
-              onClick={() => navigate('/dashboard')}
             >
               <Settings className="h-4 w-4" />
               <span className="text-xs font-medium">设置</span>
