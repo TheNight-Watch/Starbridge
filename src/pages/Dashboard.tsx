@@ -44,7 +44,6 @@ const Dashboard = () => {
   const [reminderFrequency, setReminderFrequency] = useState("中频");
   const [reminderStyle, setReminderStyle] = useState("鼓励");
   const [volume, setVolume] = useState([60]);
-  const [reportType, setReportType] = useState("周报");
   const navigate = useNavigate();
 
   const weeklyProgressData = [
@@ -91,11 +90,7 @@ const Dashboard = () => {
   ];
 
   const getReportData = () => {
-    switch (reportType) {
-      case "日报": return dailyData;
-      case "月报": return monthlyData;
-      default: return weeklyProgressData;
-    }
+    return weeklyProgressData;
   };
 
   return (
@@ -396,188 +391,6 @@ const Dashboard = () => {
                     <Target className="h-4 w-4 mr-2" />
                     添加新目标
                   </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Reports Tab - 更新后的报告页面 */}
-            <TabsContent value="reports" className="space-y-6 mt-0">
-              <Card className="bg-white/80 backdrop-blur-sm border-0 rounded-3xl shadow-lg">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-3 text-gray-800 text-lg">
-                      <div className="bg-gradient-to-r from-orange-400 to-yellow-500 p-2 rounded-xl">
-                        <BookOpen className="h-5 w-5 text-white" />
-                      </div>
-                      数据报告与分析
-                    </CardTitle>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="rounded-2xl font-medium bg-white/70 border-gray-200 hover:bg-orange-50"
-                    >
-                      <Share2 className="h-4 w-4 mr-2" />
-                      分享报告
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* 报告类型切换按钮 */}
-                  <div className="flex gap-2">
-                    {["日报", "周报", "月报"].map((type) => (
-                      <Button 
-                        key={type}
-                        variant={type === reportType ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setReportType(type)}
-                        className={`flex-1 rounded-2xl font-medium ${
-                          type === reportType 
-                            ? "bg-gradient-to-r from-orange-400 to-yellow-500 text-white border-0 shadow-lg" 
-                            : "bg-white/70 border-gray-200 text-gray-700 hover:bg-orange-50"
-                        }`}
-                      >
-                        {type}
-                      </Button>
-                    ))}
-                  </div>
-
-                  {/* 技能进步趋势图 */}
-                  <div className="bg-white/70 rounded-2xl p-5">
-                    <h3 className="font-bold text-gray-800 mb-4">技能进步趋势</h3>
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={getReportData()}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                          <XAxis dataKey="name" stroke="#666" fontSize={12} />
-                          <YAxis stroke="#666" fontSize={12} />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: '#fff', 
-                              border: '1px solid #e5e5e5', 
-                              borderRadius: '12px',
-                              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                            }} 
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="社交互动" 
-                            stroke="#fb923c" 
-                            strokeWidth={3}
-                            dot={{ fill: '#fb923c', strokeWidth: 2, r: 4 }}
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="情绪管理" 
-                            stroke="#06b6d4" 
-                            strokeWidth={3}
-                            dot={{ fill: '#06b6d4', strokeWidth: 2, r: 4 }}
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="生活自理" 
-                            stroke="#f43f5e" 
-                            strokeWidth={3}
-                            dot={{ fill: '#f43f5e', strokeWidth: 2, r: 4 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-
-                  {/* 练习频率分析 */}
-                  <div className="bg-white/70 rounded-2xl p-5">
-                    <h3 className="font-bold text-gray-800 mb-4">练习频率分析</h3>
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={practiceFrequencyData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                          <XAxis dataKey="skill" stroke="#666" fontSize={12} />
-                          <YAxis stroke="#666" fontSize={12} />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: '#fff', 
-                              border: '1px solid #e5e5e5', 
-                              borderRadius: '12px',
-                              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                            }} 
-                          />
-                          <Bar dataKey="frequency" fill="#fbbf24" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-
-                  {/* 成功率变化趋势 */}
-                  <div className="bg-white/70 rounded-2xl p-5">
-                    <h3 className="font-bold text-gray-800 mb-4">成功率变化趋势</h3>
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={successTrendData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                          <XAxis dataKey="period" stroke="#666" fontSize={12} />
-                          <YAxis stroke="#666" fontSize={12} />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: '#fff', 
-                              border: '1px solid #e5e5e5', 
-                              borderRadius: '12px',
-                              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                            }} 
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="success" 
-                            stroke="#10b981" 
-                            strokeWidth={3}
-                            dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-
-                  {/* 本周进展概览 - 改为折线图 */}
-                  <div className="bg-white/70 rounded-2xl p-5">
-                    <h3 className="font-bold text-gray-800 mb-4">本周进展概览</h3>
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={weeklyProgressData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                          <XAxis dataKey="name" stroke="#666" fontSize={12} />
-                          <YAxis stroke="#666" fontSize={12} />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: '#fff', 
-                              border: '1px solid #e5e5e5', 
-                              borderRadius: '12px',
-                              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                            }} 
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="社交互动" 
-                            stroke="#fb923c" 
-                            strokeWidth={2}
-                            dot={{ fill: '#fb923c', strokeWidth: 2, r: 3 }}
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="情绪管理" 
-                            stroke="#06b6d4" 
-                            strokeWidth={2}
-                            dot={{ fill: '#06b6d4', strokeWidth: 2, r: 3 }}
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="生活自理" 
-                            stroke="#f43f5e" 
-                            strokeWidth={2}
-                            dot={{ fill: '#f43f5e', strokeWidth: 2, r: 3 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
