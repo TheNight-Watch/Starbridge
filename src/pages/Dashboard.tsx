@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
   LineChart, 
   Line, 
@@ -42,19 +42,29 @@ import {
 } from "lucide-react";
 
 const Dashboard = () => {
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("reports");
   const [reminderFrequency, setReminderFrequency] = useState("中频");
   const [reminderStyle, setReminderStyle] = useState("鼓励");
   const navigate = useNavigate();
 
+  // 读取从其他页面传递的activeTab状态
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+      // 清除状态以避免重复设置
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [location.state]);
+
   const weeklyProgressData = [
-    { name: '周一', 社交互动: 65, 情绪管理: 50, 生活自理: 70 },
-    { name: '周二', 社交互动: 68, 情绪管理: 55, 生活自理: 75 },
-    { name: '周三', 社交互动: 72, 情绪管理: 58, 生活自理: 78 },
-    { name: '周四', 社交互动: 70, 情绪管理: 62, 生活自理: 80 },
-    { name: '周五', 社交互动: 75, 情绪管理: 60, 生活自理: 85 },
-    { name: '周六', 社交互动: 78, 情绪管理: 65, 生活自理: 88 },
-    { name: '周日', 社交互动: 80, 情绪管理: 68, 生活自理: 90 }
+    { name: '1月', 社交互动: 65, 情绪管理: 50, 生活自理: 70 },
+    { name: '2月', 社交互动: 68, 情绪管理: 55, 生活自理: 75 },
+    { name: '3月', 社交互动: 72, 情绪管理: 58, 生活自理: 78 },
+    { name: '4月', 社交互动: 70, 情绪管理: 62, 生活自理: 80 },
+    { name: '5月', 社交互动: 75, 情绪管理: 60, 生活自理: 85 },
+    { name: '6月', 社交互动: 78, 情绪管理: 65, 生活自理: 88 },
+    { name: '7月', 社交互动: 80, 情绪管理: 68, 生活自理: 90 }
   ];
 
   // 场景数据
@@ -128,7 +138,7 @@ const Dashboard = () => {
           <div className="container mx-auto px-4 py-6">
             {/* Reports Tab */}
             <TabsContent value="reports" className="space-y-6 mt-0">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                 <Card className="bg-gradient-to-br from-orange-400 to-orange-500 text-white border-0 rounded-3xl shadow-xl overflow-hidden">
                   <CardContent className="p-6 relative">
                     <div className="flex items-center justify-between relative z-10">
@@ -144,38 +154,6 @@ const Dashboard = () => {
                     <div className="absolute -right-8 -top-8 w-16 h-16 bg-white/10 rounded-full"></div>
                   </CardContent>
                 </Card>
-
-                <Card className="bg-gradient-to-br from-yellow-400 to-amber-500 text-white border-0 rounded-3xl shadow-xl overflow-hidden">
-                  <CardContent className="p-6 relative">
-                    <div className="flex items-center justify-between relative z-10">
-                      <div>
-                        <p className="text-yellow-100 text-sm font-medium">成功率</p>
-                        <p className="text-3xl font-bold mt-1">78%</p>
-                      </div>
-                      <div className="bg-white/20 p-3 rounded-2xl">
-                        <Award className="h-8 w-8 text-white" />
-                      </div>
-                    </div>
-                    <div className="absolute -left-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full"></div>
-                    <div className="absolute -left-8 -top-8 w-16 h-16 bg-white/10 rounded-full"></div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-rose-400 to-pink-500 text-white border-0 rounded-3xl shadow-xl overflow-hidden">
-                  <CardContent className="p-6 relative">
-                    <div className="flex items-center justify-between relative z-10">
-                      <div>
-                        <p className="text-rose-100 text-sm font-medium">活跃天数</p>
-                        <p className="text-3xl font-bold mt-1">27天</p>
-                      </div>
-                      <div className="bg-white/20 p-3 rounded-2xl">
-                        <Calendar className="h-8 w-8 text-white" />
-                      </div>
-                    </div>
-                    <div className="absolute -right-4 -top-4 w-20 h-20 bg-white/10 rounded-full"></div>
-                    <div className="absolute -left-8 -bottom-8 w-16 h-16 bg-white/10 rounded-full"></div>
-                  </CardContent>
-                </Card>
               </div>
 
               <Card className="bg-white/80 backdrop-blur-sm border-0 rounded-3xl shadow-lg">
@@ -184,7 +162,7 @@ const Dashboard = () => {
                     <div className="bg-gradient-to-r from-orange-400 to-yellow-500 p-2 rounded-xl">
                       <BarChart3 className="h-5 w-5 text-white" />
                     </div>
-                    技能发展趋势
+                    适应能力
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">

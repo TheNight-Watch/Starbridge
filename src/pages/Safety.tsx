@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useNavigate } from "react-router-dom";
 import LocationMap from "@/components/LocationMap";
+import { activityService } from "@/services/activityService";
+import { ActivityRecord, ActivityRecordUpdate } from "@/lib/supabase";
 import { 
   Heart, 
   Smartphone, 
@@ -27,49 +28,18 @@ import {
   Clock,
   FileText,
   Edit3,
-  Save
+  Save,
+  RefreshCw,
+  Zap
 } from "lucide-react";
 
 const Safety = () => {
   const [activeTab, setActiveTab] = useState("safety");
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [activityData, setActivityData] = useState<ActivityRecord[]>([]);
+  const [isLoadingActivities, setIsLoadingActivities] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const navigate = useNavigate();
-
-  // 活动记录数据
-  const activityData = [
-    {
-      time: "14:30",
-      activity: "到达公园",
-      location: "中心公园",
-      status: "安全",
-      icon: MapPin,
-      color: "text-green-600 bg-green-100"
-    },
-    {
-      time: "14:15",
-      activity: "离开家",
-      location: "家",
-      status: "正常",
-      icon: Clock,
-      color: "text-blue-600 bg-blue-100"
-    },
-    {
-      time: "13:45",
-      activity: "午餐时间",
-      location: "家",
-      status: "完成",
-      icon: Heart,
-      color: "text-orange-600 bg-orange-100"
-    },
-    {
-      time: "12:30",
-      activity: "学习时间",
-      location: "家",
-      status: "完成",
-      icon: BookOpen,
-      color: "text-purple-600 bg-purple-100"
-    }
-  ];
 
   // 孩子档案数据
   const [profileData, setProfileData] = useState({
@@ -84,6 +54,88 @@ const Safety = () => {
     languageAbility: "有口语但能力有限",
     sensoryProcessing: "感觉过度反应"
   });
+
+  // 场景类型到图标和颜色的映射
+  const getActivityIcon = (sceneType: ActivityRecord['scene_type']) => {
+    const iconMap = {
+      arrive_park: { icon: MapPin, color: "text-green-600 bg-green-100" },
+      leave_home: { icon: Clock, color: "text-blue-600 bg-blue-100" },
+      lunch_time: { icon: Heart, color: "text-orange-600 bg-orange-100" },
+      study_time: { icon: BookOpen, color: "text-purple-600 bg-purple-100" },
+      enter_classroom: { icon: BookOpen, color: "text-blue-600 bg-blue-100" },
+      exercise: { icon: Zap, color: "text-red-600 bg-red-100" },
+      rest: { icon: Clock, color: "text-gray-600 bg-gray-100" }
+    };
+    return iconMap[sceneType] || { icon: Clock, color: "text-gray-600 bg-gray-100" };
+  };
+
+  // 格式化时间显示
+  const formatTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('zh-CN', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    });
+  };
+
+  // 加载活动记录
+  const loadActivities = async () => {
+    setIsLoadingActivities(true);
+    try {
+      const activities = await activityService.getRecentActivities(8);
+      setActivityData(activities);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('加载活动记录失败:', error);
+    } finally {
+      setIsLoadingActivities(false);
+    }
+  };
+
+  // 模拟硬件数据上传
+  const simulateHardwareData = async (sceneType: ActivityRecord['scene_type']) => {
+    try {
+      await activityService.simulateHardwareUpload(sceneType);
+      // 数据会通过实时订阅自动更新，无需手动刷新
+    } catch (error) {
+      console.error('模拟硬件数据上传失败:', error);
+    }
+  };
+
+  // 设置实时订阅和初始数据加载
+  useEffect(() => {
+    // 初始加载数据
+    loadActivities();
+
+    // 设置实时订阅
+    const unsubscribe = activityService.subscribeToActivities((update: ActivityRecordUpdate) => {
+      console.log('收到活动记录更新:', update);
+      
+      if (update.eventType === 'INSERT' && update.new) {
+        // 新增记录时，添加到列表顶部
+        setActivityData(prev => [update.new!, ...prev.slice(0, 7)]); // 保持最多8条记录
+        setLastUpdated(new Date());
+      } else if (update.eventType === 'UPDATE' && update.new) {
+        // 更新记录
+        setActivityData(prev => 
+          prev.map(item => item.id === update.new!.id ? update.new! : item)
+        );
+        setLastUpdated(new Date());
+      } else if (update.eventType === 'DELETE' && update.old) {
+        // 删除记录
+        setActivityData(prev => 
+          prev.filter(item => item.id !== update.old!.id)
+        );
+        setLastUpdated(new Date());
+      }
+    });
+
+    // 清理订阅
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   const handleTabNavigation = (tabValue: string) => {
     if (tabValue === "safety") {
@@ -216,38 +268,111 @@ const Safety = () => {
                 </CardContent>
               </Card>
 
-              {/* 活动记录板块 */}
+              {/* 活动记录板块 - 集成Supabase实时数据 */}
               <Card className="bg-white/80 backdrop-blur-sm border-0 rounded-3xl shadow-lg">
                 <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-3 text-gray-800 text-lg">
-                    <div className="bg-gradient-to-r from-orange-400 to-yellow-500 p-2 rounded-xl">
-                      <Clock className="h-5 w-5 text-white" />
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-3 text-gray-800 text-lg">
+                      <div className="bg-gradient-to-r from-orange-400 to-yellow-500 p-2 rounded-xl">
+                        <Clock className="h-5 w-5 text-white" />
+                      </div>
+                      实时活动记录
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={loadActivities}
+                        disabled={isLoadingActivities}
+                        className="rounded-xl"
+                      >
+                        <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingActivities ? 'animate-spin' : ''}`} />
+                        刷新
+                      </Button>
                     </div>
-                    活动记录
-                  </CardTitle>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    最后更新: {lastUpdated.toLocaleTimeString('zh-CN')}
+                  </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    {activityData.map((item, index) => (
-                      <div key={index} className="flex items-center gap-4 p-4 bg-white/70 rounded-2xl">
-                        <div className={`p-2 rounded-xl ${item.color}`}>
-                          <item.icon className="h-4 w-4" />
+                  {isLoadingActivities ? (
+                    <div className="flex items-center justify-center py-8">
+                      <RefreshCw className="h-6 w-6 animate-spin text-orange-500" />
+                      <span className="ml-2 text-gray-600">加载中...</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {activityData.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          暂无活动记录
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium text-gray-800">{item.activity}</span>
-                            <span className="text-sm text-gray-500">{item.time}</span>
-                          </div>
-                          <div className="flex items-center justify-between mt-1">
-                            <span className="text-sm text-gray-600">{item.location}</span>
-                            <Badge variant="outline" className="text-xs">
-                              {item.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                      ) : (
+                        activityData.map((item, index) => {
+                          const { icon: IconComponent, color } = getActivityIcon(item.scene_type);
+                          return (
+                            <div key={item.id || index} className="flex items-center gap-4 p-4 bg-white/70 rounded-2xl">
+                              <div className={`p-2 rounded-xl ${color}`}>
+                                <IconComponent className="h-4 w-4" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-medium text-gray-800">{item.activity}</span>
+                                  <span className="text-sm text-gray-500">{formatTime(item.timestamp)}</span>
+                                </div>
+                                <div className="flex items-center justify-between mt-1">
+                                  <span className="text-sm text-gray-600">{item.location}</span>
+                                  <Badge variant="outline" className="text-xs">
+                                    {item.status}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* 模拟硬件数据上传按钮 - 用于测试 */}
+                  <div className="mt-6 p-4 bg-blue-50/70 rounded-2xl border border-blue-200">
+                    <h4 className="font-medium text-blue-800 mb-3">模拟智能设备数据上传</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => simulateHardwareData('enter_classroom')}
+                        className="text-xs"
+                      >
+                        进入教室
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => simulateHardwareData('leave_home')}
+                        className="text-xs"
+                      >
+                        离开家
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => simulateHardwareData('exercise')}
+                        className="text-xs"
+                      >
+                        运动时间
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => simulateHardwareData('rest')}
+                        className="text-xs"
+                      >
+                        休息时间
+                      </Button>
+                    </div>
                   </div>
+                  
                   <Button 
                     variant="outline"
                     className="w-full mt-4 rounded-2xl bg-white/70 border-gray-200 hover:bg-orange-50"
