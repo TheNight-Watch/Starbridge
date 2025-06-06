@@ -6,15 +6,7 @@ CREATE TABLE IF NOT EXISTS activity_records (
   location VARCHAR(255) NOT NULL,
   status VARCHAR(100) NOT NULL,
   device_id VARCHAR(100) NOT NULL,
-  scene_type VARCHAR(50) NOT NULL CHECK (scene_type IN (
-    'enter_classroom', 
-    'leave_home', 
-    'arrive_park', 
-    'lunch_time', 
-    'study_time', 
-    'exercise', 
-    'rest'
-  )),
+  scene_type VARCHAR(50) NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

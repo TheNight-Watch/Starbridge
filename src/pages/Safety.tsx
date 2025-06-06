@@ -55,18 +55,82 @@ const Safety = () => {
     sensoryProcessing: "感觉过度反应"
   });
 
-  // 场景类型到图标和颜色的映射
+  // 场景类型到图标和颜色的映射 - 支持动态扩展
   const getActivityIcon = (sceneType: ActivityRecord['scene_type']) => {
-    const iconMap = {
+    // 预定义的场景类型映射
+    const iconMap: Record<string, { icon: any, color: string }> = {
+      // 教育相关
+      enter_classroom: { icon: BookOpen, color: "text-blue-600 bg-blue-100" },
+      leave_classroom: { icon: BookOpen, color: "text-blue-500 bg-blue-50" },
+      study_time: { icon: BookOpen, color: "text-purple-600 bg-purple-100" },
+      
+      // 位置相关
       arrive_park: { icon: MapPin, color: "text-green-600 bg-green-100" },
       leave_home: { icon: Clock, color: "text-blue-600 bg-blue-100" },
+      arrive_home: { icon: Heart, color: "text-pink-600 bg-pink-100" },
+      
+      // 活动相关
       lunch_time: { icon: Heart, color: "text-orange-600 bg-orange-100" },
-      study_time: { icon: BookOpen, color: "text-purple-600 bg-purple-100" },
-      enter_classroom: { icon: BookOpen, color: "text-blue-600 bg-blue-100" },
       exercise: { icon: Zap, color: "text-red-600 bg-red-100" },
-      rest: { icon: Clock, color: "text-gray-600 bg-gray-100" }
+      rest: { icon: Clock, color: "text-gray-600 bg-gray-100" },
+      play_time: { icon: Zap, color: "text-yellow-600 bg-yellow-100" },
+      
+      // 社交相关
+      meet_friend: { icon: Heart, color: "text-purple-600 bg-purple-100" },
+      group_activity: { icon: Heart, color: "text-indigo-600 bg-indigo-100" },
+      
+      // 健康相关
+      medical_checkup: { icon: Shield, color: "text-red-600 bg-red-100" },
+      therapy_session: { icon: Heart, color: "text-teal-600 bg-teal-100" },
+      
+      // 交通相关
+      take_bus: { icon: MapPin, color: "text-blue-600 bg-blue-100" },
+      walk: { icon: Clock, color: "text-green-600 bg-green-100" }
     };
-    return iconMap[sceneType] || { icon: Clock, color: "text-gray-600 bg-gray-100" };
+
+    // 如果有精确匹配，直接返回
+    if (iconMap[sceneType]) {
+      return iconMap[sceneType];
+    }
+
+    // 智能匹配：根据关键词推断图标
+    const smartMatch = (keyword: string, icon: any, color: string) => {
+      if (sceneType.toLowerCase().includes(keyword.toLowerCase())) {
+        return { icon, color };
+      }
+      return null;
+    };
+
+    // 尝试智能匹配
+    const matches = [
+      smartMatch('classroom', BookOpen, "text-blue-600 bg-blue-100"),
+      smartMatch('school', BookOpen, "text-blue-600 bg-blue-100"),
+      smartMatch('study', BookOpen, "text-purple-600 bg-purple-100"),
+      smartMatch('learn', BookOpen, "text-purple-600 bg-purple-100"),
+      smartMatch('park', MapPin, "text-green-600 bg-green-100"),
+      smartMatch('home', Heart, "text-pink-600 bg-pink-100"),
+      smartMatch('arrive', MapPin, "text-green-600 bg-green-100"),
+      smartMatch('leave', Clock, "text-blue-600 bg-blue-100"),
+      smartMatch('lunch', Heart, "text-orange-600 bg-orange-100"),
+      smartMatch('dinner', Heart, "text-orange-600 bg-orange-100"),
+      smartMatch('meal', Heart, "text-orange-600 bg-orange-100"),
+      smartMatch('exercise', Zap, "text-red-600 bg-red-100"),
+      smartMatch('sport', Zap, "text-red-600 bg-red-100"),
+      smartMatch('play', Zap, "text-yellow-600 bg-yellow-100"),
+      smartMatch('rest', Clock, "text-gray-600 bg-gray-100"),
+      smartMatch('sleep', Clock, "text-gray-600 bg-gray-100"),
+      smartMatch('friend', Heart, "text-purple-600 bg-purple-100"),
+      smartMatch('social', Heart, "text-purple-600 bg-purple-100"),
+      smartMatch('medical', Shield, "text-red-600 bg-red-100"),
+      smartMatch('doctor', Shield, "text-red-600 bg-red-100"),
+      smartMatch('therapy', Heart, "text-teal-600 bg-teal-100"),
+      smartMatch('bus', MapPin, "text-blue-600 bg-blue-100"),
+      smartMatch('transport', MapPin, "text-blue-600 bg-blue-100"),
+      smartMatch('walk', Clock, "text-green-600 bg-green-100")
+    ].find(match => match !== null);
+
+    // 返回匹配结果或默认图标
+    return matches || { icon: Clock, color: "text-gray-600 bg-gray-100" };
   };
 
   // 格式化时间显示
