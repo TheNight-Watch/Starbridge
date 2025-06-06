@@ -6,6 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useNavigate } from "react-router-dom";
 import LocationMap from "@/components/LocationMap";
 import { 
@@ -21,11 +25,14 @@ import {
   AlertTriangle,
   Phone,
   Clock,
-  FileText
+  FileText,
+  Edit3,
+  Save
 } from "lucide-react";
 
 const Safety = () => {
   const [activeTab, setActiveTab] = useState("safety");
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const navigate = useNavigate();
 
   // 活动记录数据
@@ -65,47 +72,18 @@ const Safety = () => {
   ];
 
   // 孩子档案数据
-  const profileData = {
+  const [profileData, setProfileData] = useState({
     basicInfo: {
       name: "小明",
       age: "8岁",
       gender: "男",
       diagnosisDate: "2023年3月"
     },
-    dsm5Level: {
-      level: "二级：需要大量支持",
-      description: "社交沟通缺陷显著；受限重复行为频繁且明显干扰",
-      details: [
-        "社交沟通有明显困难",
-        "受限重复行为干扰功能",
-        "需要结构化支持环境"
-      ]
-    },
-    cognitiveLevel: {
-      level: "边缘智力",
-      iqRange: "70-85",
-      description: "认知能力略低于平均水平，但具备基本学习能力"
-    },
-    languageAbility: {
-      level: "有口语但能力有限",
-      description: "仿说、单词、短语、句子但语用异常",
-      functionalCommunication: "部分功能性沟通能力"
-    },
-    sensoryProcessing: {
-      patterns: [
-        {
-          type: "感觉过度反应",
-          description: "对普通刺激反应强烈痛苦",
-          examples: "对大声音、强光敏感"
-        },
-        {
-          type: "感觉寻求",
-          description: "主动寻求大量/特定刺激",
-          examples: "喜欢旋转、摇摆动作"
-        }
-      ]
-    }
-  };
+    dsm5Level: "二级",
+    cognitiveLevel: "边缘智力",
+    languageAbility: "有口语但能力有限",
+    sensoryProcessing: "感觉过度反应"
+  });
 
   const handleTabNavigation = (tabValue: string) => {
     if (tabValue === "safety") {
@@ -115,6 +93,11 @@ const Safety = () => {
       // Navigate to dashboard with the specific tab
       navigate('/dashboard', { state: { activeTab: tabValue } });
     }
+  };
+
+  const handleProfileSave = () => {
+    // Save profile data logic would go here
+    setIsEditingProfile(false);
   };
 
   return (
@@ -280,149 +263,232 @@ const Safety = () => {
             <TabsContent value="profile" className="space-y-6 mt-0">
               <Card className="bg-white/80 backdrop-blur-sm border-0 rounded-3xl shadow-lg">
                 <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-3 text-gray-800 text-lg">
-                    <div className="bg-gradient-to-r from-orange-400 to-yellow-500 p-2 rounded-xl">
-                      <User className="h-5 w-5 text-white" />
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-gray-800 text-lg">
+                      <div className="bg-gradient-to-r from-orange-400 to-yellow-500 p-2 rounded-xl">
+                        <User className="h-5 w-5 text-white" />
+                      </div>
+                      孩子档案
                     </div>
-                    孩子档案
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingProfile(!isEditingProfile)}
+                      className="rounded-xl"
+                    >
+                      {isEditingProfile ? (
+                        <>
+                          <Save className="h-4 w-4 mr-2" />
+                          保存
+                        </>
+                      ) : (
+                        <>
+                          <Edit3 className="h-4 w-4 mr-2" />
+                          编辑
+                        </>
+                      )}
+                    </Button>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* 基本信息 */}
                   <div className="bg-white/70 rounded-2xl p-5">
                     <h3 className="font-bold text-gray-800 mb-4">基本信息</h3>
-                    <Table>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell className="font-medium text-gray-700">姓名</TableCell>
-                          <TableCell>{profileData.basicInfo.name}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium text-gray-700">年龄</TableCell>
-                          <TableCell>{profileData.basicInfo.age}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium text-gray-700">性别</TableCell>
-                          <TableCell>{profileData.basicInfo.gender}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium text-gray-700">诊断日期</TableCell>
-                          <TableCell>{profileData.basicInfo.diagnosisDate}</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  {/* DSM-5 诊断严重程度等级 */}
-                  <div className="bg-white/70 rounded-2xl p-5">
-                    <h3 className="font-bold text-gray-800 mb-4">DSM-5 诊断严重程度等级</h3>
-                    <Table>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell className="font-medium text-gray-700">当前等级</TableCell>
-                          <TableCell>
-                            <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
-                              {profileData.dsm5Level.level}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium text-gray-700">描述</TableCell>
-                          <TableCell>{profileData.dsm5Level.description}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium text-gray-700">具体表现</TableCell>
-                          <TableCell>
-                            <ul className="list-disc list-inside space-y-1 text-sm">
-                              {profileData.dsm5Level.details.map((detail, index) => (
-                                <li key={index}>{detail}</li>
-                              ))}
-                            </ul>
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  {/* 认知水平/智力功能 */}
-                  <div className="bg-white/70 rounded-2xl p-5">
-                    <h3 className="font-bold text-gray-800 mb-4">认知水平 / 智力功能</h3>
-                    <Table>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell className="font-medium text-gray-700">等级</TableCell>
-                          <TableCell>
-                            <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                              {profileData.cognitiveLevel.level}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium text-gray-700">IQ范围</TableCell>
-                          <TableCell>{profileData.cognitiveLevel.iqRange}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium text-gray-700">描述</TableCell>
-                          <TableCell>{profileData.cognitiveLevel.description}</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  {/* 语言能力 */}
-                  <div className="bg-white/70 rounded-2xl p-5">
-                    <h3 className="font-bold text-gray-800 mb-4">语言能力</h3>
-                    <Table>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell className="font-medium text-gray-700">等级</TableCell>
-                          <TableCell>
-                            <Badge className="bg-green-100 text-green-800 border-green-200">
-                              {profileData.languageAbility.level}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium text-gray-700">描述</TableCell>
-                          <TableCell>{profileData.languageAbility.description}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium text-gray-700">功能性沟通</TableCell>
-                          <TableCell>{profileData.languageAbility.functionalCommunication}</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  {/* 感官处理 */}
-                  <div className="bg-white/70 rounded-2xl p-5">
-                    <h3 className="font-bold text-gray-800 mb-4">感官处理</h3>
-                    <div className="space-y-4">
-                      {profileData.sensoryProcessing.patterns.map((pattern, index) => (
-                        <div key={index} className="border border-gray-200 rounded-xl p-4">
-                          <Table>
-                            <TableBody>
-                              <TableRow>
-                                <TableCell className="font-medium text-gray-700">模式类型</TableCell>
-                                <TableCell>
-                                  <Badge className="bg-purple-100 text-purple-800 border-purple-200">
-                                    {pattern.type}
-                                  </Badge>
-                                </TableCell>
-                              </TableRow>
-                              <TableRow>
-                                <TableCell className="font-medium text-gray-700">描述</TableCell>
-                                <TableCell>{pattern.description}</TableCell>
-                              </TableRow>
-                              <TableRow>
-                                <TableCell className="font-medium text-gray-700">具体表现</TableCell>
-                                <TableCell>{pattern.examples}</TableCell>
-                              </TableRow>
-                            </TableBody>
-                          </Table>
-                        </div>
-                      ))}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">姓名</Label>
+                        {isEditingProfile ? (
+                          <Input 
+                            id="name" 
+                            value={profileData.basicInfo.name}
+                            onChange={(e) => setProfileData({
+                              ...profileData,
+                              basicInfo: { ...profileData.basicInfo, name: e.target.value }
+                            })}
+                          />
+                        ) : (
+                          <p className="text-gray-800 font-medium">{profileData.basicInfo.name}</p>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="age">年龄</Label>
+                        {isEditingProfile ? (
+                          <Input 
+                            id="age" 
+                            value={profileData.basicInfo.age}
+                            onChange={(e) => setProfileData({
+                              ...profileData,
+                              basicInfo: { ...profileData.basicInfo, age: e.target.value }
+                            })}
+                          />
+                        ) : (
+                          <p className="text-gray-800 font-medium">{profileData.basicInfo.age}</p>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="gender">性别</Label>
+                        {isEditingProfile ? (
+                          <Select 
+                            value={profileData.basicInfo.gender}
+                            onValueChange={(value) => setProfileData({
+                              ...profileData,
+                              basicInfo: { ...profileData.basicInfo, gender: value }
+                            })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="男">男</SelectItem>
+                              <SelectItem value="女">女</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <p className="text-gray-800 font-medium">{profileData.basicInfo.gender}</p>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="diagnosisDate">诊断日期</Label>
+                        {isEditingProfile ? (
+                          <Input 
+                            id="diagnosisDate" 
+                            value={profileData.basicInfo.diagnosisDate}
+                            onChange={(e) => setProfileData({
+                              ...profileData,
+                              basicInfo: { ...profileData.basicInfo, diagnosisDate: e.target.value }
+                            })}
+                          />
+                        ) : (
+                          <p className="text-gray-800 font-medium">{profileData.basicInfo.diagnosisDate}</p>
+                        )}
+                      </div>
                     </div>
+                  </div>
+
+                  {/* 专业评估信息 */}
+                  <div className="bg-white/70 rounded-2xl p-5">
+                    <h3 className="font-bold text-gray-800 mb-4">专业评估信息</h3>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="dsm5Level">DSM-5 诊断严重程度等级</Label>
+                        {isEditingProfile ? (
+                          <Select 
+                            value={profileData.dsm5Level}
+                            onValueChange={(value) => setProfileData({ ...profileData, dsm5Level: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="一级">一级：需要支持</SelectItem>
+                              <SelectItem value="二级">二级：需要大量支持</SelectItem>
+                              <SelectItem value="三级">三级：需要非常大量的支持</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                              {profileData.dsm5Level}
+                            </Badge>
+                            <span className="text-sm text-gray-600">
+                              {profileData.dsm5Level === "一级" && "需要支持"}
+                              {profileData.dsm5Level === "二级" && "需要大量支持"}
+                              {profileData.dsm5Level === "三级" && "需要非常大量的支持"}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="cognitiveLevel">认知水平</Label>
+                        {isEditingProfile ? (
+                          <Select 
+                            value={profileData.cognitiveLevel}
+                            onValueChange={(value) => setProfileData({ ...profileData, cognitiveLevel: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="极重度智力障碍">极重度智力障碍</SelectItem>
+                              <SelectItem value="重度智力障碍">重度智力障碍</SelectItem>
+                              <SelectItem value="中度智力障碍">中度智力障碍</SelectItem>
+                              <SelectItem value="轻度智力障碍">轻度智力障碍</SelectItem>
+                              <SelectItem value="边缘智力">边缘智力</SelectItem>
+                              <SelectItem value="平均水平">平均水平</SelectItem>
+                              <SelectItem value="高于平均水平">高于平均水平</SelectItem>
+                              <SelectItem value="优秀">优秀</SelectItem>
+                              <SelectItem value="极优秀">极优秀</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                            {profileData.cognitiveLevel}
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="languageAbility">语言能力</Label>
+                        {isEditingProfile ? (
+                          <Select 
+                            value={profileData.languageAbility}
+                            onValueChange={(value) => setProfileData({ ...profileData, languageAbility: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="无口语">无口语</SelectItem>
+                              <SelectItem value="有口语但能力有限">有口语但能力有限</SelectItem>
+                              <SelectItem value="语言通常但语用异常">语言通常但语用异常</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Badge className="bg-green-100 text-green-800 border-green-200">
+                            {profileData.languageAbility}
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="sensoryProcessing">感官处理</Label>
+                        {isEditingProfile ? (
+                          <Select 
+                            value={profileData.sensoryProcessing}
+                            onValueChange={(value) => setProfileData({ ...profileData, sensoryProcessing: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="感觉过度反应">感觉过度反应</SelectItem>
+                              <SelectItem value="感觉低度反应">感觉低度反应</SelectItem>
+                              <SelectItem value="感觉寻求">感觉寻求</SelectItem>
+                              <SelectItem value="感觉辨别困难">感觉辨别困难</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+                            {profileData.sensoryProcessing}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {isEditingProfile && (
+                      <div className="mt-6 flex justify-end">
+                        <Button 
+                          onClick={handleProfileSave}
+                          className="bg-gradient-to-r from-orange-400 to-yellow-500 text-white"
+                        >
+                          保存档案信息
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
