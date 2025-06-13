@@ -67,45 +67,13 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 
 ### 支持的场景类型
 
-**灵活场景类型系统**：现在支持任意场景类型，不再限制为预定义值。智能硬件可以上传任何场景类型，应用会自动匹配合适的图标。
-
-**预定义场景类型**（推荐使用）：
 - `enter_classroom`: 进入教室
-- `leave_classroom`: 离开教室  
 - `leave_home`: 离开家
-- `arrive_home`: 到达家
 - `arrive_park`: 到达公园
 - `lunch_time`: 午餐时间
 - `study_time`: 学习时间
 - `exercise`: 运动时间
 - `rest`: 休息时间
-- `play_time`: 游戏时间
-- `meet_friend`: 见朋友
-- `group_activity`: 集体活动
-- `medical_checkup`: 体检
-- `therapy_session`: 治疗课程
-- `take_bus`: 乘坐公交
-- `walk`: 步行
-
-**自定义场景类型**：
-系统支持任意自定义场景类型。应用会通过关键词智能匹配图标：
-- 包含 "classroom" 或 "school" → 显示教育图标
-- 包含 "park" → 显示位置图标  
-- 包含 "home" → 显示家庭图标
-- 包含 "exercise" 或 "sport" → 显示运动图标
-- 包含 "medical" 或 "doctor" → 显示医疗图标
-- 包含 "friend" 或 "social" → 显示社交图标
-- 其他未匹配类型 → 显示默认时钟图标
-
-**示例自定义场景类型**：
-```javascript
-// 这些都是有效的场景类型
-"swimming_lesson"        // 会匹配到运动图标
-"visiting_grandparents"  // 会显示默认图标
-"art_therapy"           // 会匹配到治疗图标
-"playground_activity"   // 会匹配到游戏图标
-"school_pickup"         // 会匹配到教育图标
-```
 
 ## 智能硬件集成
 
