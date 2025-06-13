@@ -32,7 +32,8 @@ import {
   Save,
   RefreshCw,
   Zap,
-  Camera
+  Camera,
+  Timer
 } from "lucide-react";
 
 const Safety = () => {
@@ -42,6 +43,12 @@ const Safety = () => {
   const [isLoadingActivities, setIsLoadingActivities] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [isVideoStreamOpen, setIsVideoStreamOpen] = useState(false);
+  
+  // 位置预警相关状态
+  const [isLocationAlertActive, setIsLocationAlertActive] = useState(false);
+  const [alertTimer, setAlertTimer] = useState<NodeJS.Timeout | null>(null);
+  const [showLocationAlert, setShowLocationAlert] = useState(false);
+  
   const navigate = useNavigate();
 
   // 孩子档案数据
@@ -155,6 +162,36 @@ const Safety = () => {
     setIsEditingProfile(false);
   };
 
+  // 位置预警功能
+  const handleLocationAlert = () => {
+    if (isLocationAlertActive) {
+      // 如果预警已激活，则取消
+      if (alertTimer) {
+        clearTimeout(alertTimer);
+        setAlertTimer(null);
+      }
+      setIsLocationAlertActive(false);
+    } else {
+      // 激活预警，10秒后弹出警告
+      setIsLocationAlertActive(true);
+      const timer = setTimeout(() => {
+        setShowLocationAlert(true);
+        setIsLocationAlertActive(false);
+        setAlertTimer(null);
+      }, 10000); // 10秒后弹出
+      setAlertTimer(timer);
+    }
+  };
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (alertTimer) {
+        clearTimeout(alertTimer);
+      }
+    };
+  }, [alertTimer]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-amber-50 flex flex-col">
       {/* Header */}
@@ -214,7 +251,7 @@ const Safety = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Button 
                       variant="outline" 
                       className="flex items-center gap-3 p-4 h-16 rounded-2xl bg-white/70 border-gray-200 hover:bg-orange-50 justify-start"
@@ -226,6 +263,35 @@ const Safety = () => {
                       <div className="text-left">
                         <div className="font-medium text-gray-800">即时视频</div>
                         <div className="text-sm text-gray-500">实时监控画面</div>
+                      </div>
+                    </Button>
+
+                    {/* 位置预警按钮 */}
+                    <Button 
+                      variant="outline" 
+                      className={`flex items-center gap-3 p-4 h-16 rounded-2xl border-gray-200 hover:bg-yellow-50 justify-start ${
+                        isLocationAlertActive 
+                          ? 'bg-yellow-100 border-yellow-300' 
+                          : 'bg-white/70'
+                      }`}
+                      onClick={handleLocationAlert}
+                    >
+                      <div className={`p-2 rounded-xl ${
+                        isLocationAlertActive 
+                          ? 'bg-yellow-200' 
+                          : 'bg-yellow-100'
+                      }`}>
+                        <Timer className={`h-5 w-5 text-yellow-600 ${
+                          isLocationAlertActive ? 'animate-pulse' : ''
+                        }`} />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-medium text-gray-800">
+                          {isLocationAlertActive ? '预警激活中...' : '位置监控'}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {isLocationAlertActive ? '10秒后检测' : '点击启动监控'}
+                        </div>
                       </div>
                     </Button>
 
@@ -681,6 +747,52 @@ const Safety = () => {
         onClose={() => setIsVideoStreamOpen(false)}
         deviceId="smart_device_001"
       />
+
+      {/* 位置预警对话框 */}
+      <Dialog open={showLocationAlert} onOpenChange={setShowLocationAlert}>
+        <DialogContent className="bg-white rounded-3xl border-0 shadow-xl max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center text-lg font-bold text-red-600 flex items-center justify-center gap-2">
+              <AlertTriangle className="h-6 w-6 text-red-500" />
+              位置预警
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="text-center">
+              <div className="bg-red-50 p-4 rounded-2xl mb-4">
+                <p className="text-red-700 font-medium text-lg">
+                  ⚠️ 孩子位置长时间未动
+                </p>
+                <p className="text-red-600 text-sm mt-2">
+                  请注意观察孩子当前状况
+                </p>
+              </div>
+              <div className="space-y-3">
+                <Button 
+                  className="w-full bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white border-0 rounded-2xl h-12 font-medium"
+                  onClick={() => setIsVideoStreamOpen(true)}
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  查看实时视频
+                </Button>
+                <Button 
+                  className="w-full bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white border-0 rounded-2xl h-12 font-medium"
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  呼叫孩子
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="w-full rounded-2xl h-12 font-medium"
+                  onClick={() => setShowLocationAlert(false)}
+                >
+                  我知道了
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
