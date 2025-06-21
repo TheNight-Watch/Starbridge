@@ -33,6 +33,7 @@ export class WebRTCVideoService {
   private reconnectTimer: NodeJS.Timeout | null = null;
   private statsInterval: NodeJS.Timeout | null = null;
   private isConnecting = false;
+  private clientId: string | null = null;
 
   // 回调函数
   private onRemoteStreamCallback?: (stream: MediaStream) => void;
@@ -80,17 +81,20 @@ export class WebRTCVideoService {
       // 1. 建立WebSocket连接到信令服务器
       await this.connectSignalingServer();
       
-      // 2. 初始化RTCPeerConnection
+      // 2. 注册为家长端设备
+      await this.registerAsParentDevice();
+      
+      // 3. 初始化RTCPeerConnection
       await this.initializePeerConnection();
       
-      // 3. 发送连接请求到硬件设备
+      // 4. 发送连接请求到硬件设备
       this.sendSignalingMessage({
         type: 'connect_device',
         deviceId: this.config.deviceId,
         clientType: 'parent_app'
       });
 
-      // 4. 开始收集连接统计
+      // 5. 开始收集连接统计
       this.startStatsCollection();
 
       this.isConnecting = false;
@@ -143,6 +147,50 @@ export class WebRTCVideoService {
     });
   }
 
+  // 注册为家长端设备
+  private async registerAsParentDevice(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
+        reject(new Error('信令服务器未连接'));
+        return;
+      }
+
+      // 监听注册确认消息
+      const originalOnMessage = this.websocket.onmessage;
+      this.websocket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'connection_established') {
+          this.clientId = data.clientId;
+          console.log('获得客户端ID:', this.clientId);
+          
+          // 发送设备注册请求
+          this.sendSignalingMessage({
+            type: 'register_device',
+            clientType: 'parent_app',
+            deviceId: this.config.deviceId
+          });
+        } else if (data.type === 'registration_confirmed') {
+          console.log('家长端设备注册成功');
+          this.websocket!.onmessage = originalOnMessage;
+          resolve();
+        } else if (data.type === 'error') {
+          console.error('设备注册失败:', data.error);
+          this.websocket!.onmessage = originalOnMessage;
+          reject(new Error(data.error));
+        }
+      };
+
+      // 设置注册超时
+      setTimeout(() => {
+        if (this.websocket?.onmessage !== originalOnMessage) {
+          this.websocket!.onmessage = originalOnMessage;
+          reject(new Error('设备注册超时'));
+        }
+      }, 5000);
+    });
+  }
+
   // 初始化RTCPeerConnection
   private async initializePeerConnection(): Promise<void> {
     const configuration: RTCConfiguration = {
@@ -155,7 +203,7 @@ export class WebRTCVideoService {
     // 监听连接状态变化
     this.peerConnection.onconnectionstatechange = () => {
       const state = this.peerConnection?.connectionState;
-      console.log('连接状态变化:', state);
+      console.log('WebRTC连接状态变化:', state);
       if (state) {
         this.onConnectionStateCallback?.(state);
         
@@ -168,6 +216,7 @@ export class WebRTCVideoService {
     // 监听ICE候选
     this.peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
+        console.log('发送ICE候选:', event.candidate);
         this.sendSignalingMessage({
           type: 'ice_candidate',
           candidate: event.candidate,
@@ -182,6 +231,7 @@ export class WebRTCVideoService {
       const [remoteStream] = event.streams;
       if (remoteStream) {
         this.remoteStream = remoteStream;
+        console.log('设置远程视频流:', remoteStream);
         this.onRemoteStreamCallback?.(remoteStream);
       }
     };
@@ -195,8 +245,21 @@ export class WebRTCVideoService {
 
     try {
       switch (message.type) {
+        case 'connection_established':
+          // 在registerAsParentDevice中处理
+          break;
+
+        case 'registration_confirmed':
+          // 在registerAsParentDevice中处理
+          break;
+
         case 'device_connected':
-          console.log('设备已连接，等待offer');
+          console.log('设备已连接，准备开始视频通信');
+          this.onConnectionStateCallback?.('connecting');
+          break;
+
+        case 'parent_connected':
+          console.log('有新的家长端连接');
           break;
 
         case 'offer':
@@ -212,8 +275,12 @@ export class WebRTCVideoService {
           break;
 
         case 'device_disconnected':
-          console.log('设备已断开连接');
+          console.log('硬件设备已断开连接');
           this.onConnectionStateCallback?.('disconnected');
+          break;
+
+        case 'device_status_update':
+          console.log('设备状态更新:', message.status);
           break;
 
         case 'error':
@@ -232,14 +299,19 @@ export class WebRTCVideoService {
 
   // 处理Offer
   private async handleOffer(offer: RTCSessionDescriptionInit) {
-    if (!this.peerConnection) return;
+    if (!this.peerConnection) {
+      console.error('PeerConnection未初始化');
+      return;
+    }
 
+    console.log('处理来自硬件设备的Offer');
     await this.peerConnection.setRemoteDescription(offer);
     
     // 创建Answer
     const answer = await this.peerConnection.createAnswer();
     await this.peerConnection.setLocalDescription(answer);
     
+    console.log('发送Answer到硬件设备');
     // 发送Answer
     this.sendSignalingMessage({
       type: 'answer',
@@ -250,22 +322,33 @@ export class WebRTCVideoService {
 
   // 处理Answer
   private async handleAnswer(answer: RTCSessionDescriptionInit) {
-    if (!this.peerConnection) return;
+    if (!this.peerConnection) {
+      console.error('PeerConnection未初始化');
+      return;
+    }
+    
+    console.log('处理来自硬件设备的Answer');
     await this.peerConnection.setRemoteDescription(answer);
   }
 
   // 处理ICE候选
   private async handleIceCandidate(candidate: RTCIceCandidateInit) {
-    if (!this.peerConnection) return;
+    if (!this.peerConnection) {
+      console.error('PeerConnection未初始化');
+      return;
+    }
+    
+    console.log('添加ICE候选:', candidate);
     await this.peerConnection.addIceCandidate(candidate);
   }
 
   // 发送信令消息
   private sendSignalingMessage(message: any) {
     if (this.websocket?.readyState === WebSocket.OPEN) {
+      console.log('发送信令消息:', message.type);
       this.websocket.send(JSON.stringify(message));
     } else {
-      console.error('信令服务器未连接，无法发送消息');
+      console.error('信令服务器未连接，无法发送消息:', message.type);
     }
   }
 
@@ -276,7 +359,9 @@ export class WebRTCVideoService {
       console.log(`尝试重连信令服务器 (${this.reconnectAttempts}/${this.webrtcConfig.signalingServer.maxReconnectAttempts})`);
       
       this.reconnectTimer = setTimeout(() => {
-        this.connectSignalingServer().catch(console.error);
+        this.connectSignalingServer()
+          .then(() => this.registerAsParentDevice())
+          .catch(console.error);
       }, this.webrtcConfig.signalingServer.reconnectInterval);
     } else {
       console.error('信令服务器重连次数已达上限');
@@ -286,8 +371,15 @@ export class WebRTCVideoService {
 
   // 处理连接失败
   private handleConnectionFailure() {
-    console.log('WebRTC连接失败，尝试重新连接');
-    // 可以在这里实现重连逻辑
+    console.log('WebRTC连接失败，尝试重新建立连接');
+    
+    // 可以在这里实现WebRTC重连逻辑
+    setTimeout(() => {
+      if (this.isConnecting) return;
+      
+      console.log('尝试重新建立WebRTC连接');
+      this.initializePeerConnection().catch(console.error);
+    }, 3000);
   }
 
   // 开始收集统计数据
@@ -356,6 +448,21 @@ export class WebRTCVideoService {
     return deviceConfigs[deviceType] || deviceConfigs['smart_device_vision_001'];
   }
 
+  // 获取客户端ID
+  getClientId(): string | null {
+    return this.clientId;
+  }
+
+  // 获取连接状态
+  getConnectionState(): RTCPeerConnectionState | null {
+    return this.peerConnection?.connectionState || null;
+  }
+
+  // 检查是否已连接
+  isConnected(): boolean {
+    return this.peerConnection?.connectionState === 'connected';
+  }
+
   // 停止视频流
   async stopStream(): Promise<void> {
     console.log('停止视频流');
@@ -393,6 +500,7 @@ export class WebRTCVideoService {
     this.remoteStream = null;
     this.isConnecting = false;
     this.reconnectAttempts = 0;
+    this.clientId = null;
 
     console.log('视频流已停止，资源已清理');
   }

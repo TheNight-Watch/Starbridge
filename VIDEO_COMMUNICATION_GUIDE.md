@@ -1,582 +1,371 @@
-# 智能硬件视频通信系统 - 完整操作指南
-
-## 📋 系统概述
-
-本系统实现了家长端应用与智能硬件设备之间的实时视频通信，采用WebRTC技术确保低延迟（100-300ms）的高质量视频传输。
-
-### 🏗️ 系统架构
-
-```
-智能硬件设备 ←→ 信令服务器 ←→ 家长端应用
-     ↓              ↓              ↓
-  摄像头/传感器   消息转发/协商    视频播放/控制
-     ↓              ↓              ↓
-  WebRTC推送      WebSocket       WebRTC接收
-```
-
-## 🔧 技术栈
-
-- **前端**: React + TypeScript + WebRTC
-- **信令服务器**: Node.js + WebSocket
-- **硬件端**: iOS/Android + WebRTC 或 Python + OpenCV
-- **网络协议**: WebRTC (P2P) + WebSocket (信令)
-
-## 📦 部署指南
-
-### 1. 前端应用配置
-
-#### 1.1 安装依赖
-```bash
-cd social-compass-kids
-npm install
-```
-
-#### 1.2 配置WebRTC服务器
-编辑 `src/config/webrtcConfig.ts`:
-
-```typescript
-// 开发环境
-export const developmentConfig: WebRTCConfig = {
-  signalingServer: {
-    url: 'ws://localhost:8080', // 本地信令服务器
-    reconnectInterval: 3000,
-    maxReconnectAttempts: 5
-  },
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' }
-  ]
-};
-
-// 生产环境
-export const productionConfig: WebRTCConfig = {
-  signalingServer: {
-    url: 'wss://your-domain.com', // 生产环境信令服务器
-    reconnectInterval: 5000,
-    maxReconnectAttempts: 3
-  },
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    {
-      urls: 'turn:your-turn-server.com:3478',
-      username: 'your-username',
-      credential: 'your-password'
-    }
-  ]
-};
-```
-
-### 2. 信令服务器部署
-
-#### 2.1 创建信令服务器
-创建 `signaling-server/server.js`:
-
-```javascript
-const WebSocket = require('ws');
-const express = require('express');
-const https = require('https');
-const fs = require('fs');
-
-const app = express();
-const port = process.env.PORT || 8080;
-
-// 存储连接的设备
-const devices = new Map();
-const parentClients = new Map();
-
-// 创建WebSocket服务器
-const wss = new WebSocket.Server({ port });
-
-console.log(`信令服务器启动在端口 ${port}`);
-
-wss.on('connection', (ws) => {
-  console.log('新的WebSocket连接');
-
-  ws.on('message', (message) => {
-    try {
-      const data = JSON.parse(message);
-      handleMessage(ws, data);
-    } catch (error) {
-      console.error('消息解析错误:', error);
-      ws.send(JSON.stringify({ type: 'error', error: '消息格式错误' }));
-    }
-  });
-
-  ws.on('close', () => {
-    console.log('WebSocket连接关闭');
-    // 清理断开的连接
-    cleanupConnection(ws);
-  });
-
-  ws.on('error', (error) => {
-    console.error('WebSocket错误:', error);
-  });
-});
-
-function handleMessage(ws, data) {
-  console.log('收到消息:', data.type);
-
-  switch (data.type) {
-    case 'connect_device':
-      handleDeviceConnection(ws, data);
-      break;
-    case 'register_hardware':
-      registerHardwareDevice(ws, data);
-      break;
-    case 'offer':
-    case 'answer':
-    case 'ice_candidate':
-      forwardSignalingMessage(ws, data);
-      break;
-    default:
-      console.log('未知消息类型:', data.type);
-  }
-}
-
-function handleDeviceConnection(ws, data) {
-  const { deviceId, clientType } = data;
-  
-  if (clientType === 'parent_app') {
-    parentClients.set(deviceId, ws);
-    ws.deviceId = deviceId;
-    ws.clientType = 'parent';
-    
-    // 检查对应的硬件设备是否在线
-    if (devices.has(deviceId)) {
-      ws.send(JSON.stringify({ type: 'device_connected', deviceId }));
-      // 通知硬件设备有家长端连接
-      const hardwareWs = devices.get(deviceId);
-      hardwareWs.send(JSON.stringify({ type: 'parent_connected', deviceId }));
-    } else {
-      ws.send(JSON.stringify({ type: 'device_offline', deviceId }));
-    }
-  }
-}
-
-function registerHardwareDevice(ws, data) {
-  const { deviceId, deviceInfo } = data;
-  
-  devices.set(deviceId, ws);
-  ws.deviceId = deviceId;
-  ws.clientType = 'hardware';
-  
-  console.log(`硬件设备注册: ${deviceId}`, deviceInfo);
-  
-  // 通知对应的家长端设备上线
-  if (parentClients.has(deviceId)) {
-    const parentWs = parentClients.get(deviceId);
-    parentWs.send(JSON.stringify({ type: 'device_connected', deviceId }));
-  }
-}
-
-function forwardSignalingMessage(ws, data) {
-  const { deviceId } = data;
-  
-  if (ws.clientType === 'parent') {
-    // 转发给硬件设备
-    const hardwareWs = devices.get(deviceId);
-    if (hardwareWs) {
-      hardwareWs.send(JSON.stringify(data));
-    }
-  } else if (ws.clientType === 'hardware') {
-    // 转发给家长端
-    const parentWs = parentClients.get(deviceId);
-    if (parentWs) {
-      parentWs.send(JSON.stringify(data));
-    }
-  }
-}
-
-function cleanupConnection(ws) {
-  if (ws.deviceId) {
-    if (ws.clientType === 'hardware') {
-      devices.delete(ws.deviceId);
-      // 通知家长端设备离线
-      if (parentClients.has(ws.deviceId)) {
-        const parentWs = parentClients.get(ws.deviceId);
-        parentWs.send(JSON.stringify({ type: 'device_disconnected', deviceId: ws.deviceId }));
-      }
-    } else if (ws.clientType === 'parent') {
-      parentClients.delete(ws.deviceId);
-      // 通知硬件设备家长端断开
-      if (devices.has(ws.deviceId)) {
-        const hardwareWs = devices.get(ws.deviceId);
-        hardwareWs.send(JSON.stringify({ type: 'parent_disconnected', deviceId: ws.deviceId }));
-      }
-    }
-  }
-}
-```
-
-#### 2.2 部署信令服务器
-```bash
-# 创建项目目录
-mkdir signaling-server
-cd signaling-server
-
-# 初始化项目
-npm init -y
-
-# 安装依赖
-npm install ws express
-
-# 启动服务器
-node server.js
-```
-
-### 3. iOS硬件端实现
-
-#### 3.1 创建iOS项目
-```swift
-// HardwareVideoService.swift
-import Foundation
-import WebRTC
-import AVFoundation
-
-class HardwareVideoService: NSObject {
-    private var peerConnection: RTCPeerConnection?
-    private var webSocket: URLSessionWebSocketTask?
-    private var localVideoTrack: RTCVideoTrack?
-    private var localAudioTrack: RTCAudioTrack?
-    private var videoCapturer: RTCCameraVideoCapturer?
-    
-    private let deviceId = "smart_device_vision_001"
-    private let signalingServerURL = "ws://your-server.com:8080"
-    
-    override init() {
-        super.init()
-        setupWebRTC()
-        connectToSignalingServer()
-    }
-    
-    private func setupWebRTC() {
-        let config = RTCConfiguration()
-        config.iceServers = [
-            RTCIceServer(urlStrings: ["stun:stun.l.google.com:19302"])
-        ]
-        
-        let constraints = RTCMediaConstraints(
-            mandatoryConstraints: nil,
-            optionalConstraints: ["DtlsSrtpKeyAgreement": "true"]
-        )
-        
-        peerConnection = RTCPeerConnectionFactory().peerConnection(
-            with: config,
-            constraints: constraints,
-            delegate: self
-        )
-        
-        setupLocalMedia()
-    }
-    
-    private func setupLocalMedia() {
-        let factory = RTCPeerConnectionFactory()
-        
-        // 设置视频轨道
-        let videoSource = factory.videoSource()
-        videoCapturer = RTCCameraVideoCapturer(delegate: videoSource)
-        localVideoTrack = factory.videoTrack(with: videoSource, trackId: "video0")
-        
-        // 设置音频轨道
-        let audioSource = factory.audioSource(with: nil)
-        localAudioTrack = factory.audioTrack(with: audioSource, trackId: "audio0")
-        
-        // 添加到PeerConnection
-        peerConnection?.add(RTCRtpTransceiver(track: localVideoTrack!, kind: .video))
-        peerConnection?.add(RTCRtpTransceiver(track: localAudioTrack!, kind: .audio))
-        
-        // 开始摄像头捕获
-        startCameraCapture()
-    }
-    
-    private func startCameraCapture() {
-        guard let capturer = videoCapturer else { return }
-        
-        let devices = RTCCameraVideoCapturer.captureDevices()
-        if let frontCamera = devices.first(where: { $0.position == .front }) {
-            let formats = RTCCameraVideoCapturer.supportedFormats(for: frontCamera)
-            if let format = formats.first {
-                capturer.startCapture(
-                    with: frontCamera,
-                    format: format,
-                    fps: 30
-                )
-            }
-        }
-    }
-    
-    private func connectToSignalingServer() {
-        guard let url = URL(string: signalingServerURL) else { return }
-        
-        let session = URLSession(configuration: .default)
-        webSocket = session.webSocketTask(with: url)
-        webSocket?.resume()
-        
-        // 注册硬件设备
-        sendSignalingMessage([
-            "type": "register_hardware",
-            "deviceId": deviceId,
-            "deviceInfo": [
-                "name": "iPhone智能硬件",
-                "capabilities": ["video", "audio", "sensors"]
-            ]
-        ])
-        
-        receiveSignalingMessage()
-    }
-    
-    private func sendSignalingMessage(_ message: [String: Any]) {
-        guard let data = try? JSONSerialization.data(withJSONObject: message),
-              let string = String(data: data, encoding: .utf8) else { return }
-        
-        webSocket?.send(.string(string)) { error in
-            if let error = error {
-                print("发送信令消息错误: \(error)")
-            }
-        }
-    }
-    
-    private func receiveSignalingMessage() {
-        webSocket?.receive { [weak self] result in
-            switch result {
-            case .success(let message):
-                if case .string(let text) = message,
-                   let data = text.data(using: .utf8),
-                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                    self?.handleSignalingMessage(json)
-                }
-                self?.receiveSignalingMessage()
-            case .failure(let error):
-                print("接收信令消息错误: \(error)")
-            }
-        }
-    }
-    
-    private func handleSignalingMessage(_ message: [String: Any]) {
-        guard let type = message["type"] as? String else { return }
-        
-        switch type {
-        case "parent_connected":
-            print("家长端已连接")
-            createOffer()
-        case "answer":
-            if let answerDict = message["answer"] as? [String: Any] {
-                handleAnswer(answerDict)
-            }
-        case "ice_candidate":
-            if let candidateDict = message["candidate"] as? [String: Any] {
-                handleIceCandidate(candidateDict)
-            }
-        default:
-            print("未知信令消息: \(type)")
-        }
-    }
-    
-    private func createOffer() {
-        peerConnection?.offer(for: RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)) { [weak self] offer, error in
-            if let offer = offer {
-                self?.peerConnection?.setLocalDescription(offer) { error in
-                    if error == nil {
-                        self?.sendSignalingMessage([
-                            "type": "offer",
-                            "offer": [
-                                "type": offer.type.rawValue,
-                                "sdp": offer.sdp
-                            ],
-                            "deviceId": self?.deviceId ?? ""
-                        ])
-                    }
-                }
-            }
-        }
-    }
-    
-    private func handleAnswer(_ answerDict: [String: Any]) {
-        guard let type = answerDict["type"] as? String,
-              let sdp = answerDict["sdp"] as? String else { return }
-        
-        let answer = RTCSessionDescription(type: RTCSdpType(rawValue: type) ?? .answer, sdp: sdp)
-        peerConnection?.setRemoteDescription(answer, completionHandler: nil)
-    }
-    
-    private func handleIceCandidate(_ candidateDict: [String: Any]) {
-        guard let candidate = candidateDict["candidate"] as? String,
-              let sdpMLineIndex = candidateDict["sdpMLineIndex"] as? Int32,
-              let sdpMid = candidateDict["sdpMid"] as? String else { return }
-        
-        let iceCandidate = RTCIceCandidate(sdp: candidate, sdpMLineIndex: sdpMLineIndex, sdpMid: sdpMid)
-        peerConnection?.add(iceCandidate)
-    }
-}
-
-// MARK: - RTCPeerConnectionDelegate
-extension HardwareVideoService: RTCPeerConnectionDelegate {
-    func peerConnection(_ peerConnection: RTCPeerConnection, didChange stateChanged: RTCSignalingState) {
-        print("信令状态变化: \(stateChanged)")
-    }
-    
-    func peerConnection(_ peerConnection: RTCPeerConnection, didAdd stream: RTCMediaStream) {
-        print("添加远程流")
-    }
-    
-    func peerConnection(_ peerConnection: RTCPeerConnection, didRemove stream: RTCMediaStream) {
-        print("移除远程流")
-    }
-    
-    func peerConnection(_ peerConnection: RTCPeerConnection, didGenerate candidate: RTCIceCandidate) {
-        sendSignalingMessage([
-            "type": "ice_candidate",
-            "candidate": [
-                "candidate": candidate.sdp,
-                "sdpMLineIndex": candidate.sdpMLineIndex,
-                "sdpMid": candidate.sdpMid ?? ""
-            ],
-            "deviceId": deviceId
-        ])
-    }
-    
-    func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceConnectionState) {
-        print("ICE连接状态: \(newState)")
-    }
-    
-    func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceGatheringState) {
-        print("ICE收集状态: \(newState)")
-    }
-    
-    func peerConnection(_ peerConnection: RTCPeerConnection, didRemove candidates: [RTCIceCandidate]) {
-        print("移除ICE候选")
-    }
-    
-    func peerConnectionShouldNegotiate(_ peerConnection: RTCPeerConnection) {
-        print("需要重新协商")
-    }
-}
-```
-
-## 🚀 使用指南
-
-### 1. 启动系统
-
-#### 1.1 启动信令服务器
-```bash
-cd signaling-server
-node server.js
-```
-
-#### 1.2 启动前端应用
-```bash
-cd social-compass-kids
-npm run dev
-```
-
-#### 1.3 启动硬件设备
-- iOS设备：运行iOS应用
-- 其他设备：运行对应的硬件程序
-
-### 2. 操作流程
-
-#### 2.1 家长端操作
-1. 打开应用，进入安全页面
-2. 点击"实时视频监控"按钮
-3. 系统自动连接到智能硬件设备
-4. 等待连接建立（通常3-10秒）
-5. 开始接收实时视频流
-
-#### 2.2 视频控制功能
-- **视频开关**: 暂停/恢复视频显示
-- **音频开关**: 静音/取消静音
-- **重新连接**: 手动重连设备
-- **全屏模式**: 切换全屏显示
-- **连接统计**: 查看延迟和传输数据
-
-### 3. 状态指示器
-
-| 状态 | 颜色 | 说明 |
-|------|------|------|
-| 连接中... | 黄色 | 正在建立连接 |
-| 实时连接 | 绿色 | 连接正常，视频流畅 |
-| 重连中... | 红色 | 连接中断，自动重连 |
-| 连接失败 | 红色 | 连接失败，需要检查设备 |
-
-## 🔍 故障排除
-
-### 常见问题
-
-#### 1. 连接失败
-**可能原因**:
-- 信令服务器未启动
-- 硬件设备离线
-- 网络连接问题
-
-**解决方案**:
-- 检查信令服务器状态
-- 确认硬件设备在线
-- 检查网络连接
-
-#### 2. 视频卡顿
-**可能原因**:
-- 网络带宽不足
-- 设备性能问题
-- WebRTC连接质量差
-
-**解决方案**:
-- 降低视频质量设置
-- 检查网络状况
-- 尝试重新连接
-
-#### 3. 音频问题
-**可能原因**:
-- 硬件设备音频未启用
-- 浏览器权限问题
-- 音频编解码问题
-
-**解决方案**:
-- 检查硬件设备音频配置
-- 确认浏览器权限
-- 重启应用
-
-## 📊 性能优化
-
-### 1. 网络优化
-- 使用TURN服务器处理NAT穿透
-- 配置自适应码率
-- 启用网络质量监控
-
-### 2. 设备优化
-- 合理设置视频分辨率
-- 启用硬件编解码
-- 优化电池使用
-
-### 3. 用户体验优化
-- 实现断线重连
-- 添加加载状态提示
-- 提供连接质量反馈
-
-## 🔒 安全考虑
-
-### 1. 数据传输安全
-- 使用HTTPS/WSS协议
-- 启用SRTP加密
-- 实施端到端加密
-
-### 2. 设备认证
-- 设备唯一标识验证
-- 用户身份认证
-- 访问权限控制
-
-### 3. 隐私保护
-- 本地数据加密存储
-- 最小化数据收集
-- 遵循隐私法规
-
-## 📞 技术支持
-
-如有技术问题，请联系开发团队或查阅以下资源：
-- WebRTC官方文档
-- 项目GitHub仓库
-- 技术支持邮箱
+# 🎥 星桥实时视频通信系统操作指南
+
+## 📋 系统概览
+
+### 架构组件
+- **家长端应用**: React + TypeScript Web应用
+- **智能硬件端**: iOS设备(iPhone原型)
+- **信令服务器**: Node.js WebSocket服务器
+- **数据后端**: Supabase实时数据库
+
+### 技术栈
+- **前端**: React, WebRTC, WebSocket
+- **后端**: Node.js, WebSocket (ws)
+- **数据库**: Supabase
+- **通信协议**: WebRTC + WebSocket信令
 
 ---
 
-**版本**: v1.0.0  
-**更新日期**: 2024年12月  
-**作者**: 星桥项目开发团队 
+## 🚀 快速开始
+
+### 1. 启动信令服务器
+
+```bash
+# 进入信令服务器目录
+cd social-compass-kids/signaling-server
+
+# 安装依赖
+npm install
+
+# 启动服务器
+npm start
+
+# 或者开发模式(自动重启)
+npm run dev
+```
+
+服务器启动后会显示：
+```
+🚀 信令服务器启动于端口 8080
+✅ WebRTC信令服务器运行在 http://localhost:8080
+📊 健康检查: http://localhost:8080/health
+📈 统计信息: http://localhost:8080/stats
+```
+
+### 2. 启动家长端应用
+
+```bash
+# 在项目根目录
+cd social-compass-kids
+
+# 安装依赖(如果还未安装)
+npm install
+
+# 启动开发服务器
+npm run dev
+```
+
+### 3. 配置WebRTC设置
+
+检查 `src/config/webrtcConfig.ts` 文件中的配置：
+
+```typescript
+// 开发环境配置
+export const developmentConfig: WebRTCConfig = {
+  signalingServer: {
+    url: 'ws://localhost:8080', // 确保与信令服务器地址一致
+    reconnectInterval: 3000,
+    maxReconnectAttempts: 5
+  },
+  // ... 其他配置
+};
+```
+
+---
+
+## 🔧 使用说明
+
+### 家长端操作步骤
+
+1. **打开安全页面**
+   - 在应用中导航到"安全"页面
+   - 找到实时视频监控区域
+
+2. **启动视频连接**
+   - 点击"查看实时视频"按钮
+   - 系统会自动连接到智能硬件设备
+
+3. **连接状态指示**
+   - 🟡 **连接中**: 正在建立连接
+   - 🟢 **实时连接**: 连接成功，可以查看视频
+   - 🔴 **连接失败**: 连接失败，可手动重试
+
+4. **视频控制功能**
+   - 📹 **视频开关**: 暂停/恢复视频显示
+   - 🔊 **音频开关**: 静音/开启音频
+   - 🔄 **重新连接**: 手动重试连接
+   - ⛶ **全屏模式**: 切换全屏显示
+
+### 智能硬件端(iPhone)操作
+
+> 注意: 智能硬件端的WebRTC功能需要在iOS应用中实现。以下是需要实现的功能：
+
+1. **设备注册**
+   ```swift
+   // 连接到信令服务器并注册为硬件设备
+   websocket.send(JSON.stringify({
+     type: 'register_device',
+     clientType: 'hardware_device',
+     deviceId: 'smart_device_vision_001'
+   }))
+   ```
+
+2. **视频流推送**
+   - 使用AVFoundation获取摄像头画面
+   - 通过WebRTC发送视频流到家长端
+
+3. **响应连接请求**
+   - 监听来自家长端的连接请求
+   - 建立WebRTC peer connection
+
+---
+
+## 🔍 故障排除
+
+### 常见问题及解决方案
+
+#### 1. 连接失败
+**问题**: 显示"连接失败"或"设备不在线"
+
+**解决方案**:
+- 确认信令服务器正在运行 (`http://localhost:8080/health`)
+- 检查智能硬件设备是否已启动并连接到同一网络
+- 查看浏览器控制台和信令服务器日志
+
+#### 2. 视频无法显示
+**问题**: 连接成功但看不到视频
+
+**解决方案**:
+- 检查智能硬件端是否正确推送视频流
+- 确认WebRTC连接状态为"connected"
+- 检查浏览器的媒体权限设置
+
+#### 3. 音频问题
+**问题**: 视频正常但听不到声音
+
+**解决方案**:
+- 点击音频按钮取消静音
+- 检查浏览器音频权限
+- 确认智能硬件端启用了音频传输
+
+#### 4. 网络连接不稳定
+**问题**: 频繁断线重连
+
+**解决方案**:
+- 检查网络稳定性
+- 调整WebRTC配置中的重连参数
+- 考虑使用TURN服务器改善NAT穿透
+
+### 日志查看
+
+#### 浏览器控制台
+打开开发者工具查看详细日志：
+```
+F12 -> Console选项卡
+```
+
+关键日志信息：
+- `WebRTC服务初始化`
+- `信令服务器连接成功`
+- `收到远程视频流`
+- `WebRTC连接状态变化`
+
+#### 信令服务器日志
+```bash
+# 查看服务器实时日志
+tail -f signaling-server.log
+
+# 或者在开发模式下直接查看控制台输出
+```
+
+关键日志信息：
+- `新的WebSocket连接建立`
+- `设备注册: parent_app`
+- `家长端连接到设备`
+
+---
+
+## 📊 监控和统计
+
+### 连接统计信息
+
+在视频界面可以查看实时统计：
+- **延迟**: 网络往返时间(RTT)
+- **数据接收量**: 已接收的视频数据量
+- **丢包数**: 网络丢包统计
+
+### 服务器统计
+
+访问 `http://localhost:8080/stats` 查看：
+```json
+{
+  "clients": 2,
+  "rooms": [
+    {
+      "deviceId": "smart_device_vision_001",
+      "parentClients": 1,
+      "createdAt": "2024-01-20T10:30:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+## 🛠 开发和调试
+
+### 本地开发环境
+
+1. **启动完整开发环境**
+```bash
+# 终端1: 启动信令服务器
+cd signaling-server && npm run dev
+
+# 终端2: 启动前端应用
+cd .. && npm run dev
+```
+
+2. **模拟设备连接**
+   - 可以使用WebSocket测试工具模拟硬件设备连接
+   - 或者创建简单的测试页面
+
+### 测试工具
+
+#### WebSocket测试
+使用浏览器扩展或在线工具测试WebSocket连接：
+```
+URL: ws://localhost:8080
+发送消息: {"type":"register_device","clientType":"hardware_device","deviceId":"test_device"}
+```
+
+#### WebRTC测试
+在浏览器中打开 `chrome://webrtc-internals/` 查看WebRTC连接详情
+
+---
+
+## 🔒 安全配置
+
+### 生产环境部署
+
+1. **HTTPS/WSS**
+   - 生产环境必须使用HTTPS和WSS
+   - 配置SSL证书
+
+2. **防火墙设置**
+   - 开放信令服务器端口(默认8080)
+   - 配置STUN/TURN服务器
+
+3. **认证和授权**
+   - 添加设备认证机制
+   - 实现用户权限控制
+
+### 网络配置
+
+#### STUN/TURN服务器
+```typescript
+// 生产环境配置示例
+iceServers: [
+  { urls: 'stun:stun.l.google.com:19302' },
+  {
+    urls: 'turn:your-turn-server.com:3478',
+    username: 'your-username',
+    credential: 'your-credential'
+  }
+]
+```
+
+---
+
+## 📱 iOS设备集成指南
+
+### 所需实现的功能
+
+1. **WebRTC集成**
+```swift
+import WebRTC
+
+class HardwareVideoStreaming {
+    private var peerConnection: RTCPeerConnection?
+    private var localVideoTrack: RTCVideoTrack?
+    
+    func startStreaming() {
+        // 初始化摄像头
+        // 创建WebRTC连接
+        // 发送视频流
+    }
+}
+```
+
+2. **信令通信**
+```swift
+import Starscream
+
+class SignalingClient {
+    private var socket: WebSocket?
+    
+    func connect() {
+        socket = WebSocket(url: URL(string: "ws://localhost:8080")!)
+        socket?.connect()
+    }
+    
+    func registerDevice() {
+        let message = [
+            "type": "register_device",
+            "clientType": "hardware_device",
+            "deviceId": "smart_device_vision_001"
+        ]
+        socket?.write(string: JSONSerialization.jsonString(message))
+    }
+}
+```
+
+---
+
+## 🆘 支持和帮助
+
+### 常用命令
+
+```bash
+# 检查信令服务器状态
+curl http://localhost:8080/health
+
+# 查看连接统计
+curl http://localhost:8080/stats
+
+# 重启信令服务器
+pm2 restart signaling-server
+
+# 查看应用日志
+npm run dev -- --verbose
+```
+
+### 联系支持
+
+如果遇到技术问题，请提供：
+1. 错误日志(浏览器控制台和服务器日志)
+2. 网络环境信息
+3. 设备型号和操作系统版本
+4. 复现步骤描述
+
+---
+
+## 🔄 版本更新
+
+### 当前版本: v1.0.0
+
+**新功能**:
+- ✅ WebRTC实时视频传输
+- ✅ 自动重连机制
+- ✅ 连接状态监控
+- ✅ 实时统计信息
+- ✅ 全屏模式支持
+
+**计划功能**:
+- 🔲 录制功能
+- 🔲 多设备连接
+- 🔲 视频质量自适应
+- 🔲 移动端优化
+
+---
+
+这个系统现在已经具备了完整的实时视频通信能力，可以支持家长端和智能硬件设备之间的实时视频监控。通过WebRTC技术确保了低延迟的视频传输，非常适合实时监护场景。 
